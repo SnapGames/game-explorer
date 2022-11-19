@@ -1,19 +1,33 @@
 package fr.snapgames.game;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
-import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import fr.snapgames.game.core.config.Configuration;
+import fr.snapgames.game.core.entity.Camera;
+import fr.snapgames.game.core.entity.EntityType;
+import fr.snapgames.game.core.entity.GameEntity;
+import fr.snapgames.game.core.entity.TextEntity;
+import fr.snapgames.game.core.entity.behaviors.Behavior;
+import fr.snapgames.game.core.entity.behaviors.EnemyFollowerBehavior;
+import fr.snapgames.game.core.entity.behaviors.PlayerInputBehavior;
+import fr.snapgames.game.core.io.Input;
+import fr.snapgames.game.core.math.Vector2D;
+import fr.snapgames.game.core.math.physic.World;
+import fr.snapgames.game.core.utils.I18n;
 
 /**
  * Main Game Java2D test.
@@ -22,510 +36,6 @@ import javax.swing.JPanel;
  * @since 2022
  */
 public class Game extends JPanel {
-
-    /**
-     * Internal Class to manipulate simple Vector2D.
-     *
-     * @author Frédéric Delorme
-     */
-    public static class Vector2D {
-        public double x, y;
-
-        public Vector2D() {
-            x = 0.0f;
-            y = 0.0f;
-        }
-
-        /**
-         * @param x
-         * @param y
-         */
-        public Vector2D(double x, double y) {
-            super();
-            this.x = x;
-            this.y = y;
-        }
-
-        public Vector2D add(Vector2D v) {
-            return new Vector2D(x + v.x, y + v.y);
-        }
-
-        public Vector2D substract(Vector2D v1) {
-            return new Vector2D(x - v1.x, y - v1.y);
-        }
-
-        public Vector2D multiply(double f) {
-            return new Vector2D(x * f, y * f);
-        }
-
-        public double dot(Vector2D v1) {
-
-            return v1.x * y + v1.y * x;
-        }
-
-        public double length() {
-            return Math.sqrt(x * x + y * y);
-        }
-
-        public double distance(Vector2D v1) {
-            return substract(v1).length();
-        }
-
-        public Vector2D divide(double f) {
-            return new Vector2D(x / f, y / f);
-        }
-
-        public Vector2D normalize() {
-            return divide(length());
-        }
-
-        public Vector2D negate() {
-            return new Vector2D(-x, -y);
-        }
-
-        public double angle(Vector2D v1) {
-            double vDot = this.dot(v1) / (this.length() * v1.length());
-            if (vDot < -1.0)
-                vDot = -1.0;
-            if (vDot > 1.0)
-                vDot = 1.0;
-            return Math.acos(vDot);
-
-        }
-
-        public Vector2D addAll(List<Vector2D> forces) {
-            Vector2D sum = new Vector2D();
-            for (Vector2D f : forces) {
-                sum = sum.add(f);
-            }
-            return sum;
-        }
-
-        public String toString() {
-            return String.format("{x:%04.2f,y:%04.2f}", x, y);
-        }
-
-        public Vector2D maximize(double maxAccel) {
-            if (Math.abs(x) > maxAccel) {
-                x = Math.signum(x) * maxAccel;
-            }
-            if (Math.abs(y) > maxAccel) {
-                y = Math.signum(y) * maxAccel;
-            }
-            return this;
-        }
-    }
-
-    public static class World {
-        private Dimension playArea;
-        private Vector2D gravity;
-
-        public World(Dimension area, Vector2D gravity) {
-            this.playArea = area;
-            this.gravity = gravity;
-        }
-
-        public Vector2D getGravity() {
-            return this.gravity;
-        }
-
-        public Dimension getPlayArea() {
-            return playArea;
-        }
-
-        public boolean isNotContaining(GameEntity ge) {
-            return ge.position.x < 0
-                    || ge.position.x + ge.size.x > playArea.width
-                    || ge.position.y < 0
-                    || ge.position.y + ge.size.y > playArea.height;
-        }
-    }
-
-    /**
-     * Camera used to see/follow entity in game viewport.
-     *
-     * @author Frédéric Delorme
-     */
-    public static class Camera {
-        public String name;
-        public Vector2D position;
-        public GameEntity target;
-        public double rotation = 0.0f, tween = 0.0f;
-        public Dimension viewport;
-
-        public Camera(String name) {
-            this.name = name;
-            position = new Vector2D(0, 0);
-            target = null;
-        }
-
-        public Camera setTarget(GameEntity t) {
-            this.target = t;
-            return this;
-        }
-
-        public Camera setViewport(Dimension dim) {
-            this.viewport = dim;
-            return this;
-        }
-
-        public Camera setRotation(double r) {
-            this.rotation = r;
-            return this;
-        }
-
-        public Camera setTween(double tween) {
-            this.tween = tween;
-            return this;
-        }
-
-        public void preDraw(Graphics2D g) {
-            g.translate(-position.x, -position.y);
-            g.rotate(-rotation);
-        }
-
-        public void postDraw(Graphics2D g) {
-
-            g.rotate(rotation);
-            g.translate(position.x, position.y);
-        }
-
-        public void update(double dt) {
-
-            this.position.x += Math
-                    .ceil((target.position.x + (target.size.x * 0.5) - ((viewport.width) * 0.5) - this.position.x)
-                            * tween * Math.min(dt, 10));
-            this.position.y += Math
-                    .ceil((target.position.y + (target.size.y * 0.5) - ((viewport.height) * 0.5) - this.position.y)
-                            * tween * Math.min(dt, 10));
-        }
-    }
-
-    public interface Behavior {
-        void update(Game game, GameEntity entity, double dt);
-
-        void input(Game game, GameEntity entity);
-
-        void draw(Game game, GameEntity entity, Graphics2D g);
-    }
-
-    public enum EntityType {
-        RECTANGLE,
-        CIRCLE,
-        IMAGE;
-    }
-
-    /**
-     * Entity manipulated by Game.
-     *
-     * @author Frédéric Delorme
-     */
-    public static class GameEntity {
-        public String name = "noname";
-        public Vector2D position = new Vector2D(0, 0);
-        public Vector2D speed = new Vector2D(0, 0);
-        public Vector2D acceleration = new Vector2D(0, 0);
-        public Vector2D size = new Vector2D(16, 16);
-        public EntityType type = EntityType.RECTANGLE;
-        public boolean stickToCamera = false;
-        public double elasticity = 1.0;
-        public double roughness = 1.0;
-        public double rotation = 0.0;
-        public List<Vector2D> forces = new ArrayList<>();
-        public Color color = Color.RED;
-        public Map<String, Object> attributes = new HashMap<>();
-        public List<Behavior> behaviors = new ArrayList<>();
-        public BufferedImage image;
-
-        /**
-         * Create a new GameEntity with a name.
-         *
-         * @param name Name of the new entity.
-         */
-        public GameEntity(String name) {
-            this.name = name;
-            attributes.put("maxSpeed", 8.0);
-            attributes.put("maxAcceleration", 3.0);
-            attributes.put("mass", 10.0);
-        }
-
-        public void update(Game g, double dt) {
-            for (Behavior b : behaviors) {
-                b.update(g, this, dt);
-            }
-            if (!isStickToCamera()) {
-                this.acceleration = this.acceleration.addAll(this.forces);
-                this.acceleration = this.acceleration.multiply((double) attributes.get("mass"));
-
-                this.acceleration.maximize((double) attributes.get("maxAcceleration"));
-
-                this.speed = this.speed.add(this.acceleration.multiply(dt)).multiply(roughness);
-                this.speed.maximize((double) attributes.get("maxSpeed"));
-
-                this.position = this.position.add(this.speed.multiply(dt));
-                this.forces.clear();
-            }
-        }
-
-        public void draw(Graphics2D g) {
-            switch (type) {
-                case IMAGE:
-                    if (Optional.ofNullable(image).isPresent()) {
-                        boolean direction = speed.x > 0;
-                        if (direction) {
-                            g.drawImage(image, (int) position.x, (int) position.y, null);
-                        } else {
-                            g.drawImage(image, (int) (position.x + size.x), (int) position.y, (int) -size.x, (int) size.y, null);
-                        }
-                    }
-                    break;
-                case RECTANGLE:
-                    g.setColor(color);
-                    g.fillRect((int) position.x, (int) position.y, (int) size.x, (int) size.y);
-                    break;
-                case CIRCLE:
-                    g.setColor(color);
-                    g.setPaint(color);
-                    g.fill(new Ellipse2D.Double(position.x, position.y, size.x, size.y));
-                    break;
-            }
-        }
-
-        public GameEntity setPosition(Vector2D pos) {
-            this.position = pos;
-            return this;
-        }
-
-        public GameEntity stickToCamera(boolean flag) {
-            this.stickToCamera = flag;
-            return this;
-        }
-
-        public boolean isStickToCamera() {
-            return stickToCamera;
-        }
-
-        public GameEntity setSize(Vector2D s) {
-            this.size = s;
-            return this;
-        }
-
-        public GameEntity setType(EntityType t) {
-            this.type = t;
-            return this;
-        }
-
-        public GameEntity setImage(BufferedImage i) {
-            this.image = i;
-            return this;
-        }
-
-
-        public GameEntity setSpeed(Vector2D speed) {
-            this.speed = speed;
-            return this;
-        }
-
-        public GameEntity setRoughness(double r) {
-            this.roughness = r;
-            return this;
-        }
-
-        public GameEntity setElasticity(double e) {
-            this.elasticity = e;
-            return this;
-        }
-
-        public Collection<String> getDebugInfo() {
-            List<String> ls = new ArrayList<>();
-            ls.add(String.format("name:%s", name));
-            ls.add(String.format("pos: %04.2f,%04.2f", this.position.x, this.position.y));
-            ls.add(String.format("spd: %04.2f,%04.2f", this.speed.x, this.speed.y));
-            ls.add(String.format("acc: %04.2f,%04.2f", this.acceleration.x, this.acceleration.y));
-            return ls;
-        }
-
-        public GameEntity setAttribute(String key, Object value) {
-            attributes.put(key, value);
-            return this;
-        }
-
-        public GameEntity setColor(Color color) {
-            this.color = color;
-            return this;
-        }
-
-        public GameEntity addBehavior(Behavior b) {
-            this.behaviors.add(b);
-            return this;
-        }
-
-        public Object getAttribute(String attrName, Object defaultValue) {
-            return attributes.getOrDefault(attrName, defaultValue);
-        }
-    }
-
-    public static class TextEntity extends GameEntity {
-
-        public String text;
-        public Font font;
-
-        /**
-         * Create a new TextEntity with a name.
-         *
-         * @param name Name of the new entity.
-         */
-        public TextEntity(String name) {
-            super(name);
-        }
-
-        public TextEntity setText(String text) {
-            this.text = text;
-            return this;
-        }
-
-        public TextEntity setFont(Font font) {
-            this.font = font;
-            return this;
-        }
-
-        public void draw(Graphics2D g) {
-            g.setColor(color);
-            g.setFont(font);
-            g.drawString(text, (int) position.x, (int) position.y);
-        }
-
-        @Override
-        public Collection<String> getDebugInfo() {
-            Collection<String> l = super.getDebugInfo();
-            l.add(String.format("txt:%s", text));
-            return l;
-        }
-    }
-
-    /**
-     * Configuration oad a properties file and
-     * let user gather converted value to
-     * <ul>
-     *     <li>Integer,</li>
-     *     <li>Double,</li>
-     *     <li>Boolean,</li>
-     *     <li>.</li>
-     * </ul>
-     * from these properties.
-     * The user can also {@link Configuration#save()} values after changes.
-     */
-    public static class Configuration {
-        private final Properties parameters = new Properties();
-        String filePath;
-
-        public Configuration(String file) {
-            this.filePath = file;
-            try {
-                parameters.load(Game.class.getResourceAsStream(filePath));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public int getInteger(String key, int defaultValue) {
-            if (parameters.containsKey(key)) {
-                return Integer.parseInt(parameters.getProperty(key));
-            }
-            return defaultValue;
-        }
-
-        public double getDouble(String key, double defaultValue) {
-            if (parameters.containsKey(key)) {
-                return Double.parseDouble(parameters.getProperty(key));
-            }
-            return defaultValue;
-        }
-
-        public boolean getBoolean(String key, boolean defaultValue) {
-            if (parameters.containsKey(key)) {
-                return Boolean.parseBoolean(parameters.getProperty(key));
-            }
-            return defaultValue;
-        }
-
-        public String getString(String key, String defaultValue) {
-            if (parameters.containsKey(key)) {
-                return parameters.getProperty(key);
-            }
-            return defaultValue;
-        }
-
-        public void parseArguments(String[] args) {
-            for (String s : args) {
-                String[] p = s.split("=");
-                String key = p[0];
-                String value = p[1];
-                if (parameters.containsKey(s)) {
-                    parameters.setProperty(key, value);
-                }
-            }
-        }
-
-        public void save() {
-            StringWriter fw = new StringWriter();
-            try {
-                parameters.store(fw, "updated From CommandLine");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    public static class I18n {
-        private static final ResourceBundle messages = ResourceBundle.getBundle("i18n.messages");
-
-        public static String get(String key) {
-            return messages.getString(key);
-        }
-
-        public static String get(String key, Object... args) {
-            return String.format(messages.getString(key), args);
-        }
-    }
-
-    /**
-     * Internal Input listener.
-     *
-     * @author Frédéric Delorme
-     */
-    public static class Input implements KeyListener {
-        Game game;
-        Map<Integer, KeyEvent> events = new ConcurrentHashMap<>();
-
-        public Input(Game g) {
-            this.game = g;
-        }
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-            if (Optional.ofNullable(game).isPresent()) {
-                game.keyTyped(e);
-            }
-        }
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            events.put(e.getKeyCode(), e);
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-            events.remove(e.getKeyCode());
-        }
-
-        public boolean getKey(int code) {
-            return (events.containsKey(code));
-        }
-
-    }
-
 
     // Frames to be rendered
     double FPS = 60.0;
@@ -537,7 +47,8 @@ public class Game extends JPanel {
     boolean pause = false;
 
     /**
-     * the Test mode is a flag to deactivate the while Loop in the {@link Game#loop} method.
+     * the Test mode is a flag to deactivate the while Loop in the {@link Game#loop}
+     * method.
      */
     private boolean testMode;
 
@@ -625,8 +136,7 @@ public class Game extends JPanel {
         int worldHeight = config.getInteger("game.world.height", 1000);
 
         world = new World(new Dimension(worldWidth, worldHeight),
-                new Vector2D(0, -0.981)
-        );
+                new Vector2D(0, -0.981));
 
         TextEntity score = (TextEntity) new TextEntity("score")
                 .setText("Score")
@@ -646,38 +156,7 @@ public class Game extends JPanel {
                 .setAttribute("maxSpeed", 6.0)
                 .setAttribute("maxAcceleration", 2.0)
                 .setAttribute("mass", 8.0)
-                .addBehavior(new Behavior() {
-                    @Override
-                    public void update(Game game, GameEntity entity, double dt) {
-
-                    }
-
-                    @Override
-                    public void input(Game game, GameEntity entity) {
-                        double accel = (Double) entity.getAttribute("speedStep", 1.0);
-                        if (input.getKey(KeyEvent.VK_ESCAPE)) {
-                            game.exit = true;
-                        }
-
-                        if (input.getKey(KeyEvent.VK_UP)) {
-                            entity.forces.add(new Vector2D(0, -accel));
-                        }
-                        if (input.getKey(KeyEvent.VK_DOWN)) {
-                            entity.forces.add(new Vector2D(0, accel));
-                        }
-                        if (input.getKey(KeyEvent.VK_RIGHT)) {
-                            entity.forces.add(new Vector2D(accel, 0));
-                        }
-                        if (input.getKey(KeyEvent.VK_LEFT)) {
-                            entity.forces.add(new Vector2D(-accel, 0));
-                        }
-                    }
-
-                    @Override
-                    public void draw(Game game, GameEntity entity, Graphics2D g) {
-
-                    }
-                });
+                .addBehavior(new PlayerInputBehavior());
         add(player);
 
         for (int i = 0; i < 10; i++) {
@@ -693,32 +172,7 @@ public class Game extends JPanel {
                     .setAttribute("mass", 5.0)
                     .setAttribute("attractionDistance", 80.0)
                     .setAttribute("attractionForce", 2.0)
-                    .addBehavior(new Behavior() {
-                        @Override
-                        public void input(Game g, GameEntity e) {
-
-                        }
-
-                        @Override
-                        public void draw(Game game, GameEntity e, Graphics2D g) {
-
-                        }
-
-                        @Override
-                        public void update(Game game, GameEntity entity, double dt) {
-                            // if player near this entity less than distance (attrDist),
-                            // a force (attrForce) is applied to entity to reach to player.
-                            GameEntity p = game.entities.get("player");
-                            double attrDist = (double) entity.attributes.get("attractionDistance");
-                            double attrForce = (double) entity.attributes.get("attractionForce");
-                            if (p.position.distance(entity.position.add(p.size.multiply(0.5))) < attrDist) {
-                                Vector2D v = p.position.substract(entity.position);
-                                entity.forces.add(v.normalize().multiply(attrForce));
-                            }
-                        }
-
-                        ;
-                    });
+                    .addBehavior(new EnemyFollowerBehavior());
 
             add(e);
         }
@@ -753,7 +207,6 @@ public class Game extends JPanel {
             g.setColor(clearColor);
             g.clearRect(0, 0, this.getWidth(), this.getHeight());
 
-
             for (GameEntity entity : entities.values()) {
                 // draw Scene
                 if (Optional.ofNullable(currentCamera).isPresent() && !entity.isStickToCamera()) {
@@ -780,7 +233,8 @@ public class Game extends JPanel {
                 g.setFont(g.getFont().deriveFont(14.0f).deriveFont(Font.BOLD));
                 String pauseTxt = I18n.get("game.state.pause.message");
                 int lng = g.getFontMetrics().stringWidth(pauseTxt);
-                g.drawString(pauseTxt, (currentCamera.viewport.width - lng) / 2, (currentCamera.viewport.height + 12) / 2);
+                g.drawString(pauseTxt, (currentCamera.viewport.width - lng) / 2,
+                        (currentCamera.viewport.height + 12) / 2);
             }
             g.dispose();
             // draw image to screen.
@@ -893,7 +347,8 @@ public class Game extends JPanel {
      * Constrain the GameEntity ge to stay in the world play area.
      *
      * @param world the defne World for the Game
-     * @param ge    the GameEntity to be checked against world's play area constrains
+     * @param ge    the GameEntity to be checked against world's play area
+     *              constrains
      * @see GameEntity
      * @see World
      */
@@ -914,7 +369,6 @@ public class Game extends JPanel {
             ge.speed = ge.speed.multiply(-ge.elasticity);
         }
     }
-
 
     /**
      * Request to close this Window frame.
@@ -982,8 +436,7 @@ public class Game extends JPanel {
         close();
     }
 
-
-    private void keyTyped(KeyEvent e) {
+    public void keyTyped(KeyEvent e) {
         if (e.getKeyChar() == 'p') {
             this.pause = !this.pause;
         }
@@ -1001,9 +454,16 @@ public class Game extends JPanel {
         return currentCamera;
     }
 
-
     public void setWorld(World world) {
         this.world = world;
+    }
+
+    public Input getInput() {
+        return input;
+    }
+
+    public void requestExit(boolean e) {
+        this.exit = e;
     }
 
     /**
