@@ -1,24 +1,28 @@
 package fr.snapgames.game.core.entity;
 
+import fr.snapgames.game.core.entity.behaviors.Behavior;
 import fr.snapgames.game.core.math.Vector2D;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Camera used to see/follow entity in game viewport.
  *
  * @author Frédéric Delorme
  */
-public class Camera {
-    public String name;
-    public Vector2D position;
+public class Camera extends GameEntity {
     public GameEntity target;
     public double rotation = 0.0f, tween = 0.0f;
     public Dimension viewport;
 
+
+    public double scale = 1.0;
+
     public Camera(String name) {
-        this.name = name;
+        super(name);
         position = new Vector2D(0, 0);
         target = null;
     }
@@ -44,18 +48,20 @@ public class Camera {
     }
 
     public void preDraw(Graphics2D g) {
+        if (rotation != 0.0) {
+            g.rotate(-rotation, viewport.width * 0.5, viewport.height * 0.5);
+        }
         g.translate(-position.x, -position.y);
-        g.rotate(-rotation);
     }
 
     public void postDraw(Graphics2D g) {
-
-        g.rotate(rotation);
         g.translate(position.x, position.y);
+        if (rotation != 0.0) {
+            g.rotate(rotation, viewport.width * 0.5, viewport.height * 0.5);
+        }
     }
 
     public void update(double dt) {
-
         this.position.x += Math
                 .ceil((target.position.x + (target.size.x * 0.5) - ((viewport.width) * 0.5) - this.position.x)
                         * tween * Math.min(dt, 10));

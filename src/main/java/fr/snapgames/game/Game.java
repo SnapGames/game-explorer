@@ -22,10 +22,12 @@ import fr.snapgames.game.core.entity.EntityType;
 import fr.snapgames.game.core.entity.GameEntity;
 import fr.snapgames.game.core.entity.TextEntity;
 import fr.snapgames.game.core.entity.behaviors.Behavior;
+import fr.snapgames.game.core.entity.behaviors.CameraInputBehavior;
 import fr.snapgames.game.core.entity.behaviors.EnemyFollowerBehavior;
 import fr.snapgames.game.core.entity.behaviors.PlayerInputBehavior;
 import fr.snapgames.game.core.io.Input;
 import fr.snapgames.game.core.math.Vector2D;
+import fr.snapgames.game.core.math.physic.Material;
 import fr.snapgames.game.core.math.physic.World;
 import fr.snapgames.game.core.utils.I18n;
 
@@ -151,8 +153,7 @@ public class Game extends JPanel {
                 .setPosition(new Vector2D(worldWidth / 2.0, worldHeight / 2.0))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.BLUE)
-                .setRoughness(1.0)
-                .setElasticity(0.21)
+                .setMaterial(new Material("playerMat", 1.0, 0.21, 1.0))
                 .setAttribute("maxSpeed", 6.0)
                 .setAttribute("maxAcceleration", 2.0)
                 .setAttribute("mass", 8.0)
@@ -165,8 +166,7 @@ public class Game extends JPanel {
                     .setSize(new Vector2D(12, 12))
                     .setColor(Color.RED)
                     .setType(EntityType.CIRCLE)
-                    .setRoughness(1.0)
-                    .setElasticity(0.1)
+                    .setMaterial(new Material("enemyMat", 1.0, 0.1, 1.0))
                     .setAttribute("maxSpeed", 8.0)
                     .setAttribute("maxAcceleration", 2.5)
                     .setAttribute("mass", 5.0)
@@ -180,10 +180,12 @@ public class Game extends JPanel {
         int vpWidth = config.getInteger("game.viewport.width", 320);
         int vpHeight = config.getInteger("game.viewport.height", 200);
 
-        Camera cam = new Camera("camera")
+        Camera cam = (Camera) new Camera("camera")
                 .setTarget(player)
                 .setTween(0.1)
-                .setViewport(new Dimension(vpWidth, vpHeight));
+                .setViewport(new Dimension(vpWidth, vpHeight))
+                .setRotation(0.0)
+                .addBehavior(new CameraInputBehavior());
         setCurrentCamera(cam);
     }
 
@@ -206,9 +208,8 @@ public class Game extends JPanel {
             // clear scene
             g.setColor(clearColor);
             g.clearRect(0, 0, this.getWidth(), this.getHeight());
-
+            // draw Scene
             for (GameEntity entity : entities.values()) {
-                // draw Scene
                 if (Optional.ofNullable(currentCamera).isPresent() && !entity.isStickToCamera()) {
                     currentCamera.preDraw(g);
                 }
@@ -221,7 +222,7 @@ public class Game extends JPanel {
                 }
             }
             if (debug) {
-                drawDebugGrid(g, 32);
+                drawDisplayDebugInfo(g, 32);
             }
             if (Optional.ofNullable(currentCamera).isPresent() && debug) {
                 drawCameraDebug(g, currentCamera);
@@ -270,7 +271,7 @@ public class Game extends JPanel {
      * @param g    Graphics API
      * @param step Step to draw for grid
      */
-    private void drawDebugGrid(Graphics2D g, int step) {
+    private void drawDisplayDebugInfo(Graphics2D g, int step) {
 
         g.setFont(g.getFont().deriveFont(8.0f));
 
@@ -315,7 +316,8 @@ public class Game extends JPanel {
         g.drawRect(10, 10, camera.viewport.width - 20, camera.viewport.height - 20);
         g.drawString(String.format("cam: %s", camera.name), 20, 20);
         g.drawString(String.format("pos: %04.2f,%04.2f", camera.position.x, camera.position.y), 20, 32);
-        g.drawString(String.format("targ: %s", camera.target.name), 20, 44);
+        g.drawString(String.format("rot: %04.2f", Math.toDegrees(camera.rotation)), 20, 44);
+        g.drawString(String.format("targ: %s", camera.target.name), 20, 56);
     }
 
     /**
@@ -326,6 +328,9 @@ public class Game extends JPanel {
             for (Behavior b : e.behaviors) {
                 b.input(this, e);
             }
+        }
+        for (Behavior b : currentCamera.behaviors) {
+            b.input(this, currentCamera);
         }
     }
 
@@ -339,6 +344,9 @@ public class Game extends JPanel {
             entity.forces.add(world.getGravity().negate());
             entity.update(this, elapsed);
             constrainEntityToWorld(world, entity);
+        }
+        for (Behavior b : currentCamera.behaviors) {
+            b.update(this, currentCamera, elapsed);
         }
         currentCamera.update(elapsed);
     }
@@ -366,7 +374,7 @@ public class Game extends JPanel {
             if (ge.position.y < 0) {
                 ge.position.y = 0;
             }
-            ge.speed = ge.speed.multiply(-ge.elasticity);
+            ge.speed = ge.speed.multiply(-ge.material.elasticity);
         }
     }
 

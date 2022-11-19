@@ -10,6 +10,7 @@ import java.util.Optional;
 import fr.snapgames.game.Game;
 import fr.snapgames.game.core.entity.behaviors.Behavior;
 import fr.snapgames.game.core.math.Vector2D;
+import fr.snapgames.game.core.math.physic.Material;
 
 import java.awt.image.BufferedImage;
 import java.awt.Color;
@@ -29,8 +30,9 @@ public class GameEntity {
     public Vector2D size = new Vector2D(16, 16);
     public EntityType type = EntityType.RECTANGLE;
     public boolean stickToCamera = false;
-    public double elasticity = 1.0;
-    public double roughness = 1.0;
+
+    public Material material;
+
     public double rotation = 0.0;
     public List<Vector2D> forces = new ArrayList<>();
     public Color color = Color.RED;
@@ -60,7 +62,7 @@ public class GameEntity {
 
             this.acceleration.maximize((double) attributes.get("maxAcceleration"));
 
-            this.speed = this.speed.add(this.acceleration.multiply(dt)).multiply(roughness);
+            this.speed = this.speed.add(this.acceleration.multiply(dt)).multiply(material.friction);
             this.speed.maximize((double) attributes.get("maxSpeed"));
 
             this.position = this.position.add(this.speed.multiply(dt));
@@ -69,6 +71,7 @@ public class GameEntity {
     }
 
     public void draw(Graphics2D g) {
+        g.rotate(rotation, size.x * 0.5, size.y * 0.5);
         switch (type) {
             case IMAGE:
                 if (Optional.ofNullable(image).isPresent()) {
@@ -127,15 +130,6 @@ public class GameEntity {
         return this;
     }
 
-    public GameEntity setRoughness(double r) {
-        this.roughness = r;
-        return this;
-    }
-
-    public GameEntity setElasticity(double e) {
-        this.elasticity = e;
-        return this;
-    }
 
     public Collection<String> getDebugInfo() {
         List<String> ls = new ArrayList<>();
@@ -143,6 +137,7 @@ public class GameEntity {
         ls.add(String.format("pos: %04.2f,%04.2f", this.position.x, this.position.y));
         ls.add(String.format("spd: %04.2f,%04.2f", this.speed.x, this.speed.y));
         ls.add(String.format("acc: %04.2f,%04.2f", this.acceleration.x, this.acceleration.y));
+        ls.add(String.format("rot: %04.2f", this.rotation));
         return ls;
     }
 
@@ -163,5 +158,10 @@ public class GameEntity {
 
     public Object getAttribute(String attrName, Object defaultValue) {
         return attributes.getOrDefault(attrName, defaultValue);
+    }
+
+    public GameEntity setMaterial(Material m) {
+        this.material = m;
+        return this;
     }
 }
