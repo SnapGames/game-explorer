@@ -1,7 +1,7 @@
 package features;
 
 import fr.snapgames.game.Game;
-import fr.snapgames.game.core.entity.Camera;
+import fr.snapgames.game.core.entity.CameraEntity;
 import fr.snapgames.game.core.entity.GameEntity;
 import fr.snapgames.game.core.math.Vector2D;
 import io.cucumber.java8.En;
@@ -23,12 +23,12 @@ public class CameraStepdefs implements En {
         });
         And("I add a Camera named {string}", (String camName) -> {
             game = (Game) TestContext.get("game");
-            Camera cam = new Camera(camName);
+            CameraEntity cam = new CameraEntity(camName);
             game.setCurrentCamera(cam);
         });
         And("I add a Camera named {string} with tween at {double}", (String camName, Double tweenFactor) -> {
             game = (Game) TestContext.get("game");
-            Camera cam = new Camera(camName).setTween(tweenFactor);
+            CameraEntity cam = new CameraEntity(camName).setTween(tweenFactor);
             game.setCurrentCamera(cam);
         });
         Then("the current Camera is not null", () -> {
@@ -41,13 +41,13 @@ public class CameraStepdefs implements En {
         });
         And("set Camera {string} target as GameEntity {string}", (String camName, String targetName) -> {
             game = (Game) TestContext.get("game");
-            GameEntity player = game.getEntities().get(targetName);
-            game.getCurrentCamera().setTarget(player);
+            GameEntity player = (GameEntity) game.getEntities().get(targetName);
+            game.getCurrentCamera().setTarget(player.name);
         });
         And("the current Camera {string} name is centered on {string}", (String camName, String targetName) -> {
             game = (Game) TestContext.get("game");
-            Camera cam = game.getCurrentCamera();
-            GameEntity target = game.getEntities().get(targetName);
+            CameraEntity cam = game.getCurrentCamera();
+            GameEntity target = (GameEntity) game.getEntities().get(targetName);
             Vector2D targetPos = target.position;
             Vector2D camPos = cam.position;
             // define the area covered by the target
@@ -60,7 +60,7 @@ public class CameraStepdefs implements En {
         });
         And("set Camera {string} viewport as {int},{int}", (String camName, Integer vpWidth, Integer vpHeight) -> {
             game = (Game) TestContext.get("game");
-            Camera cam = game.getCurrentCamera();
+            CameraEntity cam = game.getCurrentCamera();
             cam.viewport = new Dimension(vpWidth, vpHeight);
         });
 

@@ -1,12 +1,11 @@
 package fr.snapgames.game.core.gfx;
 
-import com.sun.source.util.Plugin;
 import fr.snapgames.game.Game;
 import fr.snapgames.game.core.config.Configuration;
-import fr.snapgames.game.core.entity.Camera;
+import fr.snapgames.game.core.entity.CameraEntity;
 import fr.snapgames.game.core.entity.GameEntity;
 import fr.snapgames.game.core.entity.behaviors.Behavior;
-import fr.snapgames.game.core.entity.behaviors.Entity;
+import fr.snapgames.game.core.entity.Entity;
 import fr.snapgames.game.core.gfx.plugins.GameEntityDrawPlugin;
 import fr.snapgames.game.core.gfx.plugins.RendererPlugin;
 import fr.snapgames.game.core.gfx.plugins.TextEntityDrawPlugin;
@@ -15,7 +14,6 @@ import fr.snapgames.game.core.utils.I18n;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +30,7 @@ public class Renderer {
     Configuration config;
     JFrame frame;
     BufferedImage buffer;
-    Camera currentCamera;
+    CameraEntity currentCamera;
     // Internal components
     Color clearColor = Color.BLACK;
 
@@ -46,7 +44,7 @@ public class Renderer {
         addPlugin(new TextEntityDrawPlugin());
     }
 
-    private void addPlugin(RendererPlugin rp) {
+    public void addPlugin(RendererPlugin rp) {
         this.plugins.put(rp.entityType(), rp);
     }
 
@@ -64,18 +62,15 @@ public class Renderer {
                     game.getWidth(),
                     game.getHeight());
             // draw Scene
-            for (GameEntity entity : game.getEntities().values()) {
-                if (Optional.ofNullable(currentCamera).isPresent() && !entity.isStickToCamera()) {
-                    currentCamera.preDraw(g);
-                }
+            game.getEntities().values().forEach(e -> {
+                GameEntity entity = (GameEntity) e;
+                preDraw(g, entity.isStickToCamera());
                 for (Behavior b : entity.behaviors) {
                     b.draw(game, entity, g);
                 }
                 drawEntity(g, entity);
-                if (Optional.ofNullable(currentCamera).isPresent() && !entity.isStickToCamera()) {
-                    currentCamera.postDraw(g);
-                }
-            }
+                postDraw(g, entity.isStickToCamera());
+            });
             if (game.getDebug() > 0) {
                 drawDisplayDebugInfo(game, g, 32);
             }
@@ -127,11 +122,31 @@ public class Renderer {
         }
     }
 
+    private void preDraw(Graphics2D g, boolean isSticky) {
+        if (Optional.ofNullable(currentCamera).isPresent() && !isSticky) {
+            if (currentCamera.rotation != 0.0) {
+                g.rotate(-currentCamera.rotation, currentCamera.viewport.width * 0.5, currentCamera.viewport.height * 0.5);
+            }
+            g.translate(-currentCamera.position.x, -currentCamera.position.y);
+        }
+    }
+
+    private void postDraw(Graphics2D g, boolean isSticky) {
+        if (Optional.ofNullable(currentCamera).isPresent() && !isSticky) {
+            g.translate(currentCamera.position.x, currentCamera.position.y);
+            if (currentCamera.rotation != 0.0) {
+                g.rotate(currentCamera.rotation, currentCamera.viewport.width * 0.5, currentCamera.viewport.height * 0.5);
+            }
+        }
+    }
+
+
     public void drawEntity(Graphics2D g, Entity e) {
         if (plugins.containsKey(e.getClass())) {
             RendererPlugin rp = plugins.get(e.getClass());
             rp.draw(g, e);
         }
+        e.child.forEach(c -> drawEntity(g, c));
     }
 
     /**
@@ -146,9 +161,8 @@ public class Renderer {
 
         g.setFont(g.getFont().deriveFont(8.0f));
 
-        if (Optional.ofNullable(currentCamera).isPresent()) {
-            currentCamera.preDraw(g);
-        }
+        preDraw(g, false);
+
         g.setColor(Color.LIGHT_GRAY);
         for (int x = 0; x < pe.getWorld().getPlayArea().getWidth(); x += step) {
             g.drawLine(x, 0, x, (int) pe.getWorld().getPlayArea().getHeight());
@@ -160,26 +174,21 @@ public class Renderer {
         g.drawRect(0, 0,
                 (int) pe.getWorld().getPlayArea().getWidth(),
                 (int) pe.getWorld().getPlayArea().getHeight());
-        if (Optional.ofNullable(currentCamera).isPresent()) {
-            currentCamera.postDraw(g);
-        }
+        postDraw(g, false);
 
         g.setColor(Color.ORANGE);
-        game.getEntities().forEach((k, v) -> {
-            if (Optional.ofNullable(currentCamera).isPresent() && !v.isStickToCamera()) {
-                currentCamera.preDraw(g);
-            }
+        game.getEntities().forEach((name, e) -> {
+            GameEntity entity = (GameEntity) e;
+            preDraw(g, entity.isStickToCamera());
 
-            g.drawRect((int) v.position.x, (int) v.position.y,
-                    (int) v.size.x, (int) v.size.y);
+            g.drawRect((int) entity.position.x, (int) entity.position.y,
+                    (int) entity.size.x, (int) entity.size.y);
             int il = 0;
-            for (String s : v.getDebugInfo()) {
-                g.drawString(s, (int) (v.position.x + v.size.x + 4.0), (int) v.position.y + il);
+            for (String s : entity.getDebugInfo()) {
+                g.drawString(s, (int) (entity.position.x + entity.size.x + 4.0), (int) entity.position.y + il);
                 il += 10;
             }
-            if (Optional.ofNullable(currentCamera).isPresent() && !v.isStickToCamera()) {
-                currentCamera.postDraw(g);
-            }
+            postDraw(g, entity.isStickToCamera());
 
         });
         g.drawRect(0, 0,
@@ -187,11 +196,11 @@ public class Renderer {
                 pe.getWorld().getPlayArea().height);
     }
 
-    private void drawCameraDebug(Graphics2D g, Camera camera) {
+    private void drawCameraDebug(Graphics2D g, CameraEntity camera) {
         g.drawRect(10, 10, camera.viewport.width - 20, camera.viewport.height - 20);
         g.drawString(String.format("cam: %s", camera.name), 20, 20);
         g.drawString(String.format("pos: %04.2f,%04.2f", camera.position.x, camera.position.y), 20, 32);
-        g.drawString(String.format("rot: %04.2f", Math.toDegrees(camera.rotation)), 20, 44);
-        g.drawString(String.format("targ: %s", camera.target.name), 20, 56);
+        g.drawString(String.format("rot: %04.2f°", Math.toDegrees(camera.rotation)), 20, 44);
+        g.drawString(String.format("target: %s", camera.name), 20, 56);
     }
 }

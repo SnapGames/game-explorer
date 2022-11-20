@@ -5,18 +5,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import fr.snapgames.game.Game;
 import fr.snapgames.game.core.entity.behaviors.Behavior;
-import fr.snapgames.game.core.entity.behaviors.Entity;
 import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Material;
 
 import java.awt.image.BufferedImage;
 import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.geom.Ellipse2D;
 
 /**
  * Entity manipulated by Game.
@@ -36,8 +32,6 @@ public class GameEntity extends Entity {
     public double rotation = 0.0;
     public List<Vector2D> forces = new ArrayList<>();
     public Color color = Color.RED;
-    public Map<String, Object> attributes = new HashMap<>();
-    public List<Behavior> behaviors = new ArrayList<>();
     public BufferedImage image;
 
     /**
@@ -116,24 +110,14 @@ public class GameEntity extends Entity {
         return ls;
     }
 
-    public GameEntity setAttribute(String key, Object value) {
-        attributes.put(key, value);
-        return this;
-    }
+
 
     public GameEntity setColor(Color color) {
         this.color = color;
         return this;
     }
 
-    public GameEntity addBehavior(Behavior b) {
-        this.behaviors.add(b);
-        return this;
-    }
 
-    public Object getAttribute(String attrName, Object defaultValue) {
-        return attributes.getOrDefault(attrName, defaultValue);
-    }
 
     public GameEntity setMaterial(Material m) {
         this.material = m;

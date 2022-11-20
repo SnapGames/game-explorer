@@ -2,24 +2,17 @@ package fr.snapgames.game;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.swing.*;
 
 import fr.snapgames.game.core.config.Configuration;
-import fr.snapgames.game.core.entity.Camera;
-import fr.snapgames.game.core.entity.EntityType;
-import fr.snapgames.game.core.entity.GameEntity;
-import fr.snapgames.game.core.entity.TextEntity;
+import fr.snapgames.game.core.entity.*;
 import fr.snapgames.game.core.entity.behaviors.*;
 import fr.snapgames.game.core.gfx.Renderer;
 import fr.snapgames.game.core.io.Input;
@@ -63,8 +56,8 @@ public class Game extends JPanel {
 
 
     // Internal GameEntity cache
-    Map<String, GameEntity> entities = new HashMap<>();
-    Camera currentCamera = null;
+    Map<String, Entity> entities = new HashMap<>();
+    CameraEntity currentCamera = null;
 
     public Game() {
 
@@ -148,7 +141,7 @@ public class Game extends JPanel {
                 new World(new Dimension(worldWidth, worldHeight),
                         gravity));
 
-        GameEntity player = new GameEntity("player")
+        GameEntity player = (GameEntity) new GameEntity("player")
                 .setPosition(new Vector2D(worldWidth / 2.0, worldHeight / 2.0))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.BLUE)
@@ -171,7 +164,7 @@ public class Game extends JPanel {
         add(score);
 
         for (int i = 0; i < 10; i++) {
-            GameEntity e = new GameEntity("en_" + i)
+            GameEntity e = (GameEntity) new GameEntity("en_" + i)
                     .setPosition(new Vector2D(Math.random() * worldWidth, Math.random() * worldHeight))
                     .setSize(new Vector2D(12, 12))
                     .setColor(Color.RED)
@@ -190,9 +183,9 @@ public class Game extends JPanel {
         int vpWidth = config.getInteger("game.screen.width", 320);
         int vpHeight = config.getInteger("game.screen.height", 200);
 
-        Camera cam = (Camera) new Camera("camera")
-                .setTarget(player)
-                .setTween(0.1)
+        CameraEntity cam = (CameraEntity) new CameraEntity("camera")
+                .setTarget(player.name)
+                .setTween(1.5)
                 .setViewport(new Dimension(vpWidth, vpHeight))
                 .setRotation(0.0)
                 .addBehavior(new CameraInputBehavior())
@@ -210,7 +203,7 @@ public class Game extends JPanel {
      * update game entities according to input
      */
     private void input() {
-        for (GameEntity e : entities.values()) {
+        for (Entity e : entities.values()) {
             for (Behavior b : e.behaviors) {
                 b.input(this, e);
             }
@@ -318,15 +311,15 @@ public class Game extends JPanel {
         }
     }
 
-    public Map<String, GameEntity> getEntities() {
+    public Map<String, Entity> getEntities() {
         return entities;
     }
 
-    public void setCurrentCamera(Camera cam) {
+    public void setCurrentCamera(CameraEntity cam) {
         this.currentCamera = cam;
     }
 
-    public Camera getCurrentCamera() {
+    public CameraEntity getCurrentCamera() {
         return currentCamera;
     }
 

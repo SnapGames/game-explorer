@@ -26,12 +26,13 @@ public class PhysicEngine {
 
     public void update(Game g, double elapsed) {
         g.getEntities().values().forEach(e -> {
-            updateEntity(g, e, elapsed);
-            constrainEntityToWorld(world, e);
-            for (Behavior b : g.getCurrentCamera().behaviors) {
-                b.update(g, g.getCurrentCamera(), elapsed);
-            }
+            updateEntity(g, (GameEntity) e, elapsed);
+            constrainEntityToWorld(world, (GameEntity) e);
+
         });
+        for (Behavior b : g.getCurrentCamera().behaviors) {
+            b.update(g, g.getCurrentCamera(), elapsed);
+        }
     }
 
     public void updateEntity(Game g, GameEntity e, double elapsed) {
@@ -53,6 +54,7 @@ public class PhysicEngine {
         for (Behavior b : e.behaviors) {
             b.update(g, e, elapsed);
         }
+        e.child.forEach(c -> updateEntity(g, e, elapsed));
     }
 
     /**
