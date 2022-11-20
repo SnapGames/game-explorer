@@ -22,7 +22,6 @@ public class PlayerInputBehavior implements Behavior {
         double accel = (Double) entity.getAttribute("speedStep", 1.0);
         if (input.getKey(KeyEvent.VK_ESCAPE)) {
             game.requestExit(true);
-            ;
         }
 
         if (input.getKey(KeyEvent.VK_UP)) {
