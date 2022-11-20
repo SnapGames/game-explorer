@@ -13,6 +13,7 @@ public class CameraUpdateBehavior implements Behavior {
     public void update(Game game, Entity entity, double dt) {
         CameraEntity c = (CameraEntity) entity;
         GameEntity target = (GameEntity) game.getEntities().get(c.target);
+        dt *= 100;
         c.position.x += Math
                 .ceil((target.position.x + (target.size.x * 0.5) - ((c.viewport.width) * 0.5) - c.position.x)
                         * c.tween * dt);

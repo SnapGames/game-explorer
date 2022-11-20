@@ -1,14 +1,12 @@
 package fr.snapgames.game;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import fr.snapgames.game.core.config.Configuration;
@@ -87,17 +85,21 @@ public class Game extends JPanel {
     }
 
     private JFrame createWindow(String title, int width, int height) {
-        Dimension dim = new Dimension(width, height);
         JFrame frame = new JFrame(title);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // define Window content and size.
         frame.setLayout(new GridLayout());
         frame.setContentPane(this);
+
+        Dimension dim = new Dimension(width, height);
         frame.setSize(dim);
         frame.setPreferredSize(dim);
         frame.setMinimumSize(dim);
         frame.setMaximumSize(dim);
+        frame.setIconImage(Toolkit.getDefaultToolkit()
+                .getImage(getClass()
+                        .getResource("/images/sg-logo-image.png")));
 
         setBackground(Color.BLACK);
         frame.setIgnoreRepaint(true);
@@ -134,21 +136,16 @@ public class Game extends JPanel {
 
         int worldWidth = config.getInteger("game.world.width", 1000);
         int worldHeight = config.getInteger("game.world.height", 1000);
-        Vector2D gravity = config.getVector2D("game.world.gravity", new Vector2D(0, -0.981));
         int screenWidth = config.getInteger("game.screen.width", 320);
-
-        pe.setWorld(
-                new World(new Dimension(worldWidth, worldHeight),
-                        gravity));
 
         GameEntity player = (GameEntity) new GameEntity("player")
                 .setPosition(new Vector2D(worldWidth / 2.0, worldHeight / 2.0))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.BLUE)
+                .setMass(100.0)
                 .setMaterial(new Material("playerMat", 1.0, 0.21, 1.0))
                 .setAttribute("maxSpeed", 800.0)
                 .setAttribute("maxAcceleration", 800.0)
-                .setAttribute("mass", 80.0)
                 .setAttribute("speedStep", 300.0)
                 .setAttribute("score", 0)
                 .addBehavior(new PlayerInputBehavior());
@@ -157,7 +154,7 @@ public class Game extends JPanel {
                 .setText("%05d")
                 .setValue(player, "score", 0)
                 .setFont(g.getFont().deriveFont(20.0f))
-                .setPosition(new Vector2D(screenWidth * 0.8, 25))
+                .setPosition(new Vector2D(screenWidth * 0.8, 10))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.WHITE)
                 .stickToCamera(true);
@@ -169,12 +166,12 @@ public class Game extends JPanel {
                     .setSize(new Vector2D(12, 12))
                     .setColor(Color.RED)
                     .setType(EntityType.CIRCLE)
-                    .setMaterial(new Material("enemyMat", 1.1, 0.70, 0.98))
+                    .setMass(30.0)
+                    .setMaterial(new Material("enemyMat", 1.1, 0.70, 1.0))
                     .setAttribute("maxSpeed", 800.0)
                     .setAttribute("maxAcceleration", 800.0)
-                    .setAttribute("mass", 30.0)
-                    .setAttribute("attractionDistance", 80.0)
-                    .setAttribute("attractionForce", 40.0)
+                    .setAttribute("attraction.distance", 80.0)
+                    .setAttribute("attraction.force", 40.0)
                     .addBehavior(new EnemyFollowerBehavior());
 
             add(e);
@@ -185,7 +182,7 @@ public class Game extends JPanel {
 
         CameraEntity cam = (CameraEntity) new CameraEntity("camera")
                 .setTarget(player.name)
-                .setTween(1.5)
+                .setTween(0.02)
                 .setViewport(new Dimension(vpWidth, vpHeight))
                 .setRotation(0.0)
                 .addBehavior(new CameraInputBehavior())

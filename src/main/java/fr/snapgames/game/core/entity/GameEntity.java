@@ -1,5 +1,8 @@
 package fr.snapgames.game.core.entity;
 
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,7 +15,6 @@ import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Material;
 
 import java.awt.image.BufferedImage;
-import java.awt.Color;
 
 /**
  * Entity manipulated by Game.
@@ -33,6 +35,9 @@ public class GameEntity extends Entity {
     public List<Vector2D> forces = new ArrayList<>();
     public Color color = Color.RED;
     public BufferedImage image;
+    public double mass;
+
+    public Shape box;
 
     /**
      * Create a new GameEntity with a name.
@@ -46,27 +51,9 @@ public class GameEntity extends Entity {
         attributes.put("mass", 1.0);
     }
 
-    public void update(Game g, double dt) {
-        for (Behavior b : behaviors) {
-            b.update(g, this, dt);
-        }
-        if (!isStickToCamera()) {
-            this.acceleration = this.acceleration.addAll(this.forces);
-            this.acceleration = this.acceleration.multiply((double) attributes.get("mass"));
-
-            this.acceleration.maximize((double) attributes.get("maxAcceleration"));
-
-            this.speed = this.speed.add(this.acceleration.multiply(dt)).multiply(material.friction);
-            this.speed.maximize((double) attributes.get("maxSpeed"));
-
-            this.position = this.position.add(this.speed.multiply(dt));
-            this.forces.clear();
-        }
-    }
-
-
     public GameEntity setPosition(Vector2D pos) {
         this.position = pos;
+        updateBox();
         return this;
     }
 
@@ -81,6 +68,7 @@ public class GameEntity extends Entity {
 
     public GameEntity setSize(Vector2D s) {
         this.size = s;
+        updateBox();
         return this;
     }
 
@@ -91,6 +79,7 @@ public class GameEntity extends Entity {
 
     public GameEntity setImage(BufferedImage i) {
         this.image = i;
+        this.type = EntityType.IMAGE;
         return this;
     }
 
@@ -102,7 +91,9 @@ public class GameEntity extends Entity {
 
     public Collection<String> getDebugInfo() {
         List<String> ls = new ArrayList<>();
+        ls.add(String.format("id:%d", id));
         ls.add(String.format("name:%s", name));
+        ls.add(String.format("type:%s", type));
         ls.add(String.format("pos: %04.2f,%04.2f", this.position.x, this.position.y));
         ls.add(String.format("spd: %04.2f,%04.2f", this.speed.x, this.speed.y));
         ls.add(String.format("acc: %04.2f,%04.2f", this.acceleration.x, this.acceleration.y));
@@ -111,16 +102,30 @@ public class GameEntity extends Entity {
     }
 
 
-
     public GameEntity setColor(Color color) {
         this.color = color;
         return this;
     }
 
 
-
     public GameEntity setMaterial(Material m) {
         this.material = m;
         return this;
+    }
+
+    public GameEntity setMass(double m) {
+        this.mass = m;
+        return this;
+    }
+
+    public void updateBox() {
+        switch (type) {
+            case CIRCLE -> {
+                this.box = new Ellipse2D.Double(position.x, position.y, size.x, size.y);
+            }
+            case RECTANGLE, IMAGE -> {
+                this.box = new Rectangle2D.Double(position.x, position.y, size.x, size.y);
+            }
+        }
     }
 }

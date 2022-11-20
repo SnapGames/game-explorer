@@ -14,6 +14,7 @@ import fr.snapgames.game.core.utils.I18n;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.Optional;
  * @since 1.0.0
  */
 public class Renderer {
+    private final String debugEntityNames;
     Configuration config;
     JFrame frame;
     BufferedImage buffer;
@@ -42,6 +44,7 @@ public class Renderer {
         buffer = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_ARGB);
         addPlugin(new GameEntityDrawPlugin());
         addPlugin(new TextEntityDrawPlugin());
+        debugEntityNames = config.getString("game.debug.entity.list", "");
     }
 
     public void addPlugin(RendererPlugin rp) {
@@ -62,6 +65,9 @@ public class Renderer {
                     game.getWidth(),
                     game.getHeight());
             // draw Scene
+
+            drawPlayAreaGrid(g, 32, game.getPhysicEngine());
+
             game.getEntities().values().forEach(e -> {
                 GameEntity entity = (GameEntity) e;
                 preDraw(g, entity.isStickToCamera());
@@ -159,10 +165,29 @@ public class Renderer {
 
         PhysicEngine pe = game.getPhysicEngine();
 
-        g.setFont(g.getFont().deriveFont(8.0f));
+        g.setFont(g.getFont().deriveFont(9.0f));
 
         preDraw(g, false);
 
+        postDraw(g, false);
+
+        g.setColor(Color.ORANGE);
+        game.getEntities().forEach((name, e) -> {
+            GameEntity entity = (GameEntity) e;
+            preDraw(g, entity.isStickToCamera());
+
+            drawEntityDebugBox(g, entity, Color.ORANGE);
+            drawEntityDebugLine(g, entity);
+            postDraw(g, entity.isStickToCamera());
+
+        });
+        g.drawRect(0, 0,
+                pe.getWorld().getPlayArea().width,
+                pe.getWorld().getPlayArea().height);
+    }
+
+    private void drawPlayAreaGrid(Graphics2D g, int step, PhysicEngine pe) {
+        preDraw(g, false);
         g.setColor(Color.LIGHT_GRAY);
         for (int x = 0; x < pe.getWorld().getPlayArea().getWidth(); x += step) {
             g.drawLine(x, 0, x, (int) pe.getWorld().getPlayArea().getHeight());
@@ -175,29 +200,46 @@ public class Renderer {
                 (int) pe.getWorld().getPlayArea().getWidth(),
                 (int) pe.getWorld().getPlayArea().getHeight());
         postDraw(g, false);
+    }
 
-        g.setColor(Color.ORANGE);
-        game.getEntities().forEach((name, e) -> {
-            GameEntity entity = (GameEntity) e;
-            preDraw(g, entity.isStickToCamera());
+    private void drawEntityDebugBox(Graphics2D g, GameEntity e, Color c) {
+        g.setColor(c);
+        g.draw(e.box);
+        g.setColor(Color.MAGENTA);
+        if ((double) e.getAttribute("attraction.distance", 0.0) > 0.0) {
+            double d = (double) e.getAttribute("attraction.distance", 0.0);
+            float[] dash1 = {2f, 0f, 2f};
+            BasicStroke bs1 = new BasicStroke(1,
+                    BasicStroke.CAP_BUTT,
+                    BasicStroke.JOIN_ROUND,
+                    1.0f,
+                    dash1,
+                    2f);
+            g.setStroke(bs1);
+            g.draw(new Ellipse2D.Double(
+                    e.position.x - (d - e.size.x) * 0.5,
+                    e.position.y - (d - e.size.y) * 0.5,
+                    d, d));
+            g.setStroke(new BasicStroke());
+        }
+    }
 
-            g.drawRect((int) entity.position.x, (int) entity.position.y,
-                    (int) entity.size.x, (int) entity.size.y);
+    private void drawEntityDebugLine(Graphics2D g, GameEntity entity) {
+        if (debugEntityNames.contains(entity.name)) {
+            g.setColor(Color.WHITE);
+            int hl = g.getFontMetrics().getHeight();
             int il = 0;
             for (String s : entity.getDebugInfo()) {
                 g.drawString(s, (int) (entity.position.x + entity.size.x + 4.0), (int) entity.position.y + il);
-                il += 10;
+                il += hl - 3;
             }
-            postDraw(g, entity.isStickToCamera());
-
-        });
-        g.drawRect(0, 0,
-                pe.getWorld().getPlayArea().width,
-                pe.getWorld().getPlayArea().height);
+        }
     }
 
     private void drawCameraDebug(Graphics2D g, CameraEntity camera) {
+        g.setColor(Color.YELLOW);
         g.drawRect(10, 10, camera.viewport.width - 20, camera.viewport.height - 20);
+        g.setColor(Color.WHITE);
         g.drawString(String.format("cam: %s", camera.name), 20, 20);
         g.drawString(String.format("pos: %04.2f,%04.2f", camera.position.x, camera.position.y), 20, 32);
         g.drawString(String.format("rot: %04.2f°", Math.toDegrees(camera.rotation)), 20, 44);
