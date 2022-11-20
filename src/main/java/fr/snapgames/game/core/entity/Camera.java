@@ -60,13 +60,4 @@ public class Camera extends GameEntity {
             g.rotate(rotation, viewport.width * 0.5, viewport.height * 0.5);
         }
     }
-
-    public void update(double dt) {
-        this.position.x += Math
-                .ceil((target.position.x + (target.size.x * 0.5) - ((viewport.width) * 0.5) - this.position.x)
-                        * tween * Math.min(dt, 10));
-        this.position.y += Math
-                .ceil((target.position.y + (target.size.y * 0.5) - ((viewport.height) * 0.5) - this.position.y)
-                        * tween * Math.min(dt, 10));
-    }
 }

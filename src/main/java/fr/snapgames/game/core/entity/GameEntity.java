@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import fr.snapgames.game.Game;
 import fr.snapgames.game.core.entity.behaviors.Behavior;
+import fr.snapgames.game.core.entity.behaviors.Entity;
 import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Material;
 
@@ -22,8 +23,7 @@ import java.awt.geom.Ellipse2D;
  *
  * @author Frédéric Delorme
  */
-public class GameEntity {
-    public String name = "noname";
+public class GameEntity extends Entity {
     public Vector2D position = new Vector2D(0, 0);
     public Vector2D speed = new Vector2D(0, 0);
     public Vector2D acceleration = new Vector2D(0, 0);
@@ -46,10 +46,10 @@ public class GameEntity {
      * @param name Name of the new entity.
      */
     public GameEntity(String name) {
-        this.name = name;
-        attributes.put("maxSpeed", 8.0);
-        attributes.put("maxAcceleration", 3.0);
-        attributes.put("mass", 10.0);
+        super(name);
+        attributes.put("maxSpeed", 500.0);
+        attributes.put("maxAcceleration", 300.0);
+        attributes.put("mass", 1.0);
     }
 
     public void update(Game g, double dt) {
@@ -70,31 +70,6 @@ public class GameEntity {
         }
     }
 
-    public void draw(Graphics2D g) {
-        g.rotate(rotation, size.x * 0.5, size.y * 0.5);
-        switch (type) {
-            case IMAGE:
-                if (Optional.ofNullable(image).isPresent()) {
-                    boolean direction = speed.x > 0;
-                    if (direction) {
-                        g.drawImage(image, (int) position.x, (int) position.y, null);
-                    } else {
-                        g.drawImage(image, (int) (position.x + size.x), (int) position.y, (int) -size.x, (int) size.y,
-                                null);
-                    }
-                }
-                break;
-            case RECTANGLE:
-                g.setColor(color);
-                g.fillRect((int) position.x, (int) position.y, (int) size.x, (int) size.y);
-                break;
-            case CIRCLE:
-                g.setColor(color);
-                g.setPaint(color);
-                g.fill(new Ellipse2D.Double(position.x, position.y, size.x, size.y));
-                break;
-        }
-    }
 
     public GameEntity setPosition(Vector2D pos) {
         this.position = pos;
