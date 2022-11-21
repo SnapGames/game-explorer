@@ -5,6 +5,8 @@ import java.io.StringWriter;
 import java.util.Properties;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.math.Vector2D;
+import fr.snapgames.game.core.math.physic.Material;
 
 /**
  * Configuration oad a properties file and
@@ -79,4 +81,26 @@ public class Configuration {
         }
     }
 
+    public Vector2D getVector2D(String key, Vector2D defaultValue) {
+        if (parameters.containsKey(key)) {
+            String vParam = parameters.getProperty(key);
+            String[] attrs = vParam.substring("vector2d(".length(), vParam.lastIndexOf(")") - 1).split(",");
+            return new Vector2D(Double.valueOf(attrs[0]), Double.valueOf(attrs[1]));
+        } else {
+            return defaultValue;
+        }
+    }
+
+    public Material getMaterial(String key, Material defaultMaterial) {
+        if (parameters.containsKey(key)) {
+            String vParam = parameters.getProperty(key);
+            String[] attrs = vParam.substring("material{".length(), vParam.lastIndexOf("}") - 1).split(",");
+            return new Material(attrs[0],
+                    Double.valueOf(attrs[1]),
+                    Double.valueOf(attrs[2]),
+                    Double.valueOf(attrs[3]));
+        } else {
+            return defaultMaterial;
+        }
+    }
 }
