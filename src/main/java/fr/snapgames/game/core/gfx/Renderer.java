@@ -10,6 +10,7 @@ import fr.snapgames.game.core.gfx.plugins.GameEntityDrawPlugin;
 import fr.snapgames.game.core.gfx.plugins.RendererPlugin;
 import fr.snapgames.game.core.gfx.plugins.TextEntityDrawPlugin;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
+import fr.snapgames.game.core.utils.Converters;
 import fr.snapgames.game.core.utils.I18n;
 
 import javax.swing.*;
@@ -141,8 +142,14 @@ public class Renderer {
     private void drawScreenDebugLine(Graphics2D g, Dimension viewport) {
         g.setColor(new Color(0.3f, 0.0f, 0.0f, 0.7f));
         g.fillRect(0, viewport.height - 20, viewport.width, 20);
+        g.setColor(new Color(0.6f, 0.0f, 0.0f, 0.7f));
+        g.drawLine(0, viewport.height - 20, viewport.width, viewport.height - 20);
         g.setColor(Color.ORANGE);
-        String text = String.format("[ dbg:%01d | fps:%03d]", game.getDebug(), game.getRealFPS());
+        String text = String.format("[ dbg:%01d | fps:%03d | obj:%d | time: %s]",
+                game.getDebug(),
+                game.getRealFPS(),
+                game.getEntities().size(),
+                Converters.formatTime(game.getCurrentGameTime()));
         g.setFont(g.getFont().deriveFont(10.0f));
         g.drawString(text, 8, viewport.height - 8);
     }

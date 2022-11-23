@@ -24,6 +24,7 @@ import fr.snapgames.game.core.entity.behaviors.CameraInputBehavior;
 import fr.snapgames.game.core.entity.behaviors.CameraUpdateBehavior;
 import fr.snapgames.game.core.entity.behaviors.EnemyFollowerBehavior;
 import fr.snapgames.game.core.entity.behaviors.PlayerInputBehavior;
+import fr.snapgames.game.core.entity.behaviors.ScoreUpdateBehavior;
 import fr.snapgames.game.core.gfx.Renderer;
 import fr.snapgames.game.core.io.Input;
 import fr.snapgames.game.core.math.Vector2D;
@@ -40,15 +41,15 @@ import fr.snapgames.game.core.utils.I18n;
 public class Game extends JPanel {
 
     // Frames to be rendered
-    double FPS = 60.0;
-    double fpsDelay = 1000000.0 / 60.0;
-    double scale = 2.0;
+    private double FPS = 60.0;
+    private double fpsDelay = 1000000.0 / 60.0;
+    private double scale = 2.0;
     // some internal flags
-    int debug = 0;
-    boolean exit = false;
-    boolean pause = false;
+    private int debug = 0;
+    private boolean exit = false;
+    private boolean pause = false;
 
-    long realFPS = 0;
+    private long realFPS = 0;
 
     /**
      * the Test mode is a flag to deactivate the while Loop in the {@link Game#loop}
@@ -56,16 +57,17 @@ public class Game extends JPanel {
      */
     private boolean testMode;
 
-    Configuration config;
-    I18n i18n;
-    PhysicEngine pe;
-    Renderer renderer;
-    Input input;
-    JFrame frame;
+    private Configuration config;
+    private I18n i18n;
+    private PhysicEngine pe;
+    private Renderer renderer;
+    private Input input;
+    private JFrame frame;
 
     // Internal GameEntity cache
-    Map<String, Entity> entities = new HashMap<>();
-    CameraEntity currentCamera = null;
+    private Map<String, Entity> entities = new HashMap<>();
+    private CameraEntity currentCamera = null;
+    private double startTime;
 
     public Game() {
         this("/game.properties", false);
@@ -89,6 +91,7 @@ public class Game extends JPanel {
 
         pe = new PhysicEngine(this);
         renderer = new Renderer(this);
+        startTime = System.currentTimeMillis();
 
     }
 
@@ -101,10 +104,10 @@ public class Game extends JPanel {
         frame.setContentPane(this);
 
         Dimension dim = new Dimension(width, height + frame.getInsets().top);
-        frame.setSize(dim);
-        frame.setPreferredSize(dim);
-        frame.setMinimumSize(dim);
-        frame.setMaximumSize(dim);
+        this.setSize(dim);
+        this.setPreferredSize(dim);
+        this.setMinimumSize(dim);
+        this.setMaximumSize(dim);
         frame.setIconImage(Toolkit.getDefaultToolkit()
                 .getImage(getClass()
                         .getResource("/images/sg-logo-image.png")));
@@ -165,7 +168,8 @@ public class Game extends JPanel {
                 .setPosition(new Vector2D(screenWidth * 0.8, 10))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.WHITE)
-                .stickToCamera(true);
+                .stickToCamera(true)
+                .addBehavior(new ScoreUpdateBehavior());
         add(score);
 
         for (int i = 0; i < 10; i++) {
@@ -248,6 +252,7 @@ public class Game extends JPanel {
     public void loop() {
         // elapsed Game Time
         double currentTime = System.currentTimeMillis();
+        double gameTime = currentTime - startTime;
         double previousTime = currentTime;
         double dt = 0;
         // FPS measure
@@ -364,5 +369,9 @@ public class Game extends JPanel {
     public static void main(String[] args) {
         Game game = new Game();
         game.run(args);
+    }
+
+    public long getCurrentGameTime() {
+        return System.currentTimeMillis() - (long) startTime;
     }
 }
