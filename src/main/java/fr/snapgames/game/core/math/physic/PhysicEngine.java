@@ -53,10 +53,11 @@ public class PhysicEngine {
 
     public void updateEntity(Game g, GameEntity e, double elapsed) {
         e.forces.add(world.getGravity().multiply(2.0));
-        addInfluencersEffects(e, world.getCollidingInfluencerWith(e));
         if (!e.isStickToCamera()) {
-            e.acceleration = e.acceleration.addAll(e.forces);
-            e.acceleration = e.acceleration.multiply((double) e.mass * (e.material != null ? e.material.density : 1.0));
+            Material mWorld = addInfluencersEffects(e, world.getCollidingInfluencerWith(e));
+
+            e.acceleration = e.acceleration.addAll(e.forces)
+                    .multiply((double) e.mass * (e.material != null ? e.material.density : 1.0));
 
             e.acceleration.maximize((double) e.attributes.get("maxAcceleration"));
 
@@ -75,22 +76,15 @@ public class PhysicEngine {
         e.child.forEach(c -> updateEntity(g, e, elapsed));
     }
 
-    private void addInfluencersEffects(GameEntity e, Collection<Influencer> collidingInfluencerWith) {
-        collidingInfluencerWith.forEach(i -> {
+    private Material addInfluencersEffects(GameEntity e, Collection<Influencer> collidingInfluencerWith) {
+        Material m = null;
+        for (Influencer i : collidingInfluencerWith) {
             e.addForces(i.forces);
-            if (Optional.ofNullable(i.material).isPresent()
-                    && e.getAttribute("matrerial_backup", null) != null) {
-                e.setAttribute("material_backup", e.material);
-                e.material = i.material;
-
-            } else {
-                if (e.getAttribute("material_backup", null) != null) {
-                    Material m = (Material) e.getAttribute("material_backup", null);
-                    e.material = m;
-                    e.attributes.remove("material_backup");
-                }
+            if (Optional.ofNullable(i.material).isPresent()) {
+                m = i.material;
             }
-        });
+        }
+        return m;
     }
 
     /**

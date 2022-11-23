@@ -135,4 +135,8 @@ public class GameEntity extends Entity {
         forces.add(f);
         return this;
     }
+
+    public boolean isAttributeExist(String materialName) {
+        return attributes.containsKey(materialName);
+    }
 }

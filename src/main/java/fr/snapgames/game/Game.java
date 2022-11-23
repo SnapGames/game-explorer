@@ -179,10 +179,11 @@ public class Game extends JPanel {
                 .setColor(new Color(0.6f, 0.5f, 0.0f, 0.5f)));
 
         add(new Influencer("water")
-                .setPosition(new Vector2D(0, worldHeight * 0.95))
-                .setSize(new Vector2D(worldWidth, worldHeight * 0.05))
+                .setPosition(new Vector2D(0, worldHeight * 0.80))
+                .setSize(new Vector2D(worldWidth, worldHeight * 0.20))
                 .addForce(new Vector2D(0.0, 9.81))
-                .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f)));
+                .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f))
+                .setMaterial(new Material("water", 1.0, 1.0, 0.40)));
 
         for (int i = 0; i < 10; i++) {
             GameEntity e = (GameEntity) new GameEntity("en_" + i)
