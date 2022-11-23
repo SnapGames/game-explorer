@@ -1,23 +1,34 @@
 package fr.snapgames.game;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import fr.snapgames.game.core.config.Configuration;
-import fr.snapgames.game.core.entity.*;
-import fr.snapgames.game.core.entity.behaviors.*;
+import fr.snapgames.game.core.entity.CameraEntity;
+import fr.snapgames.game.core.entity.Entity;
+import fr.snapgames.game.core.entity.EntityType;
+import fr.snapgames.game.core.entity.GameEntity;
+import fr.snapgames.game.core.entity.TextEntity;
+import fr.snapgames.game.core.entity.behaviors.Behavior;
+import fr.snapgames.game.core.entity.behaviors.CameraInputBehavior;
+import fr.snapgames.game.core.entity.behaviors.CameraUpdateBehavior;
+import fr.snapgames.game.core.entity.behaviors.EnemyFollowerBehavior;
+import fr.snapgames.game.core.entity.behaviors.PlayerInputBehavior;
 import fr.snapgames.game.core.gfx.Renderer;
 import fr.snapgames.game.core.io.Input;
 import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Material;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
-import fr.snapgames.game.core.math.physic.World;
 import fr.snapgames.game.core.utils.I18n;
 
 /**
@@ -52,13 +63,11 @@ public class Game extends JPanel {
     Input input;
     JFrame frame;
 
-
     // Internal GameEntity cache
     Map<String, Entity> entities = new HashMap<>();
     CameraEntity currentCamera = null;
 
     public Game() {
-
         this("/game.properties", false);
     }
 
@@ -81,7 +90,6 @@ public class Game extends JPanel {
         pe = new PhysicEngine(this);
         renderer = new Renderer(this);
 
-
     }
 
     private JFrame createWindow(String title, int width, int height) {
@@ -92,7 +100,7 @@ public class Game extends JPanel {
         frame.setLayout(new GridLayout());
         frame.setContentPane(this);
 
-        Dimension dim = new Dimension(width, height);
+        Dimension dim = new Dimension(width, height + frame.getInsets().top);
         frame.setSize(dim);
         frame.setPreferredSize(dim);
         frame.setMinimumSize(dim);
@@ -173,7 +181,6 @@ public class Game extends JPanel {
                     .setAttribute("attraction.distance", 80.0)
                     .setAttribute("attraction.force", 40.0)
                     .addBehavior(new EnemyFollowerBehavior());
-
             add(e);
         }
 
@@ -194,7 +201,6 @@ public class Game extends JPanel {
     public void add(GameEntity e) {
         entities.put(e.name, e);
     }
-
 
     /**
      * update game entities according to input
@@ -228,7 +234,6 @@ public class Game extends JPanel {
         renderer.draw(this, realFPS);
     }
 
-
     /**
      * Request to close this Window frame.
      */
@@ -250,7 +255,7 @@ public class Game extends JPanel {
         double timeFrame = 0.0;
         while (!exit && !testMode) {
             currentTime = System.currentTimeMillis();
-            // delta-time  in sec.
+            // delta-time in sec.
             dt = (currentTime - previousTime) * 0.001;
             input();
             if (!pause) {
@@ -278,8 +283,7 @@ public class Game extends JPanel {
             try {
                 Thread.sleep((long) (fpsDelay - dt) / 1000);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                System.err.println("unable to Wait some millis:" + e.getMessage());
             }
         }
     }
@@ -296,14 +300,14 @@ public class Game extends JPanel {
     }
 
     public void keyTyped(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_P ||
+        if (e.getKeyChar() == 'p' ||
                 e.getKeyCode() == KeyEvent.VK_PAUSE) {
             this.pause = !this.pause;
         }
-        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        if (e.getKeyChar() == 'q') {
             this.exit = true;
         }
-        if (e.getKeyCode() == KeyEvent.VK_D) {
+        if (e.getKeyChar() == 'd') {
             debug = (debug + 1 < 6 ? debug + 1 : 0);
         }
     }
@@ -327,7 +331,6 @@ public class Game extends JPanel {
     public void requestExit(boolean e) {
         this.exit = e;
     }
-
 
     public JFrame getFrame() {
         return frame;
