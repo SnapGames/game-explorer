@@ -35,7 +35,7 @@ public class GameEntityStepdefs implements En {
                 });
         And("the GameEntity {string} is stick to camera", (String entityName) -> {
             game = (Game) TestContext.get("game");
-            GameEntity e = game.getEntities().get(entityName);
+            GameEntity e = (GameEntity) game.getEntities().get(entityName);
             e.stickToCamera(true);
         });
     }
