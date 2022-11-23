@@ -28,6 +28,7 @@ import fr.snapgames.game.core.entity.behaviors.ScoreUpdateBehavior;
 import fr.snapgames.game.core.gfx.Renderer;
 import fr.snapgames.game.core.io.Input;
 import fr.snapgames.game.core.math.Vector2D;
+import fr.snapgames.game.core.math.physic.Influencer;
 import fr.snapgames.game.core.math.physic.Material;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
 import fr.snapgames.game.core.utils.I18n;
@@ -171,6 +172,17 @@ public class Game extends JPanel {
                 .stickToCamera(true)
                 .addBehavior(new ScoreUpdateBehavior());
         add(score);
+        add(new Influencer("magnet-right")
+                .setPosition(new Vector2D(0, worldHeight * 0.5))
+                .setSize(new Vector2D(100, worldHeight * 0.5))
+                .addForce(new Vector2D(10.0, 0.0))
+                .setColor(new Color(0.6f, 0.5f, 0.0f, 0.5f)));
+
+        add(new Influencer("water")
+                .setPosition(new Vector2D(0, worldHeight * 0.95))
+                .setSize(new Vector2D(worldWidth, worldHeight * 0.05))
+                .addForce(new Vector2D(0.0, 9.81))
+                .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f)));
 
         for (int i = 0; i < 10; i++) {
             GameEntity e = (GameEntity) new GameEntity("en_" + i)
@@ -203,6 +215,9 @@ public class Game extends JPanel {
     }
 
     public void add(GameEntity e) {
+        if (e instanceof Influencer) {
+            getPhysicEngine().getWorld().add((Influencer) e);
+        }
         entities.put(e.name, e);
     }
 

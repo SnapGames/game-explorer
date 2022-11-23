@@ -7,6 +7,7 @@ import fr.snapgames.game.core.entity.GameEntity;
 import fr.snapgames.game.core.entity.behaviors.Behavior;
 import fr.snapgames.game.core.entity.Entity;
 import fr.snapgames.game.core.gfx.plugins.GameEntityDrawPlugin;
+import fr.snapgames.game.core.gfx.plugins.InfluencerDrawPlugin;
 import fr.snapgames.game.core.gfx.plugins.RendererPlugin;
 import fr.snapgames.game.core.gfx.plugins.TextEntityDrawPlugin;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
@@ -44,9 +45,10 @@ public class Renderer {
         config = g.getConfiguration();
         frame = g.getFrame();
         buffer = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        debugEntityNames = config.getString("game.debug.entity.list", "");
         addPlugin(new GameEntityDrawPlugin());
         addPlugin(new TextEntityDrawPlugin());
-        debugEntityNames = config.getString("game.debug.entity.list", "");
+        addPlugin(new InfluencerDrawPlugin());
     }
 
     public void addPlugin(RendererPlugin rp) {
@@ -238,7 +240,7 @@ public class Renderer {
         g.setColor(Color.MAGENTA);
         if ((double) e.getAttribute("attraction.distance", 0.0) > 0.0) {
             double d = (double) e.getAttribute("attraction.distance", 0.0);
-            float[] dash1 = { 2f, 0f, 2f };
+            float[] dash1 = {2f, 0f, 2f};
             BasicStroke bs1 = new BasicStroke(1,
                     BasicStroke.CAP_BUTT,
                     BasicStroke.JOIN_ROUND,
