@@ -56,14 +56,17 @@ public class PhysicEngine {
         if (!e.isStickToCamera()) {
             Material mWorld = addInfluencersEffects(e, world.getCollidingInfluencerWith(e));
 
+            double friction = e.material.friction * (mWorld != null ? mWorld.friction : 1.0);
+            double density = e.material.density * (mWorld != null ? mWorld.density : 1.0);
+
             e.acceleration = e.acceleration.addAll(e.forces)
-                    .multiply((double) e.mass * (e.material != null ? e.material.density : 1.0));
+                    .multiply((double) e.mass * density);
 
             e.acceleration.maximize((double) e.attributes.get("maxAcceleration"));
 
             e.speed = e.speed
                     .add(e.acceleration.multiply(elapsed))
-                    .multiply(e.material != null ? e.material.friction : 1.0);
+                    .multiply(friction);
             e.speed.maximize((double) e.attributes.get("maxSpeed"));
 
             e.position = e.position.add(e.speed.multiply(elapsed));

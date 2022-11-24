@@ -154,7 +154,7 @@ public class Game extends JPanel {
                 .setPosition(new Vector2D(worldWidth / 2.0, worldHeight / 2.0))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.BLUE)
-                .setMass(100.0)
+                .setMass(80.0)
                 .setMaterial(new Material("playerMat", 1.0, 0.21, 1.0))
                 .setAttribute("maxSpeed", 800.0)
                 .setAttribute("maxAcceleration", 800.0)
@@ -181,7 +181,7 @@ public class Game extends JPanel {
         add(new Influencer("water")
                 .setPosition(new Vector2D(0, worldHeight * 0.80))
                 .setSize(new Vector2D(worldWidth, worldHeight * 0.20))
-                .addForce(new Vector2D(0.0, 9.81))
+                .addForce(new Vector2D(0.0, -25.84))
                 .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f))
                 .setMaterial(new Material("water", 1.0, 1.0, 0.40)));
 
