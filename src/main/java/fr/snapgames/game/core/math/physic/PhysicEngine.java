@@ -25,27 +25,26 @@ public class PhysicEngine {
         Configuration config = g.getConfiguration();
         int playAreaWidth = config.getInteger("game.world.width", 800);
         int playAreaHeight = config.getInteger("game.world.height", 800);
-        this.world = new World(
+        world = new World(
                 new Dimension(playAreaWidth, playAreaHeight),
                 config.getVector2D("game.world.gravity", new Vector2D()).multiply(-10.0));
         Material worldMat = config.getMaterial("game.world.material",
                 new Material("defaultWorldMaterial", 1.0, 1.0, 1.0));
-        this.world.setMaterial(worldMat);
+        world.setMaterial(worldMat);
     }
 
     public PhysicEngine setWorld(World w) {
-        this.world = w;
+        world = w;
         return this;
     }
 
     public void update(Game g, double elapsed) {
         g.getEntities().values().stream()
-                .filter(e -> !(e instanceof Influencer))
-                .forEach(e -> {
-                    updateEntity(g, (GameEntity) e, elapsed);
-                    constrainEntityToWorld(world, (GameEntity) e);
-
-                });
+            .filter(e -> !(e instanceof Influencer))
+            .forEach(e -> {
+                updateEntity(g, (GameEntity) e, elapsed);
+                constrainEntityToWorld(world, (GameEntity) e);
+            });
         for (Behavior b : g.getCurrentCamera().behaviors) {
             b.update(g, g.getCurrentCamera(), elapsed);
         }
@@ -56,14 +55,17 @@ public class PhysicEngine {
         if (!e.isStickToCamera()) {
             Material mWorld = addInfluencersEffects(e, world.getCollidingInfluencerWith(e));
 
+            double friction = e.material.friction * (mWorld != null ? mWorld.friction : 1.0);
+            double density = e.material.density * (mWorld != null ? mWorld.density : 1.0);
+
             e.acceleration = e.acceleration.addAll(e.forces)
-                    .multiply((double) e.mass * (e.material != null ? e.material.density : 1.0));
+                    .multiply((double) e.mass * density);
 
             e.acceleration.maximize((double) e.attributes.get("maxAcceleration"));
 
             e.speed = e.speed
                     .add(e.acceleration.multiply(elapsed))
-                    .multiply(e.material != null ? e.material.friction : 1.0);
+                    .multiply(friction);
             e.speed.maximize((double) e.attributes.get("maxSpeed"));
 
             e.position = e.position.add(e.speed.multiply(elapsed));

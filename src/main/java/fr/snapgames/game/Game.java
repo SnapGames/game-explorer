@@ -1,37 +1,23 @@
 package fr.snapgames.game;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
 import fr.snapgames.game.core.config.Configuration;
-import fr.snapgames.game.core.entity.CameraEntity;
-import fr.snapgames.game.core.entity.Entity;
-import fr.snapgames.game.core.entity.EntityType;
-import fr.snapgames.game.core.entity.GameEntity;
-import fr.snapgames.game.core.entity.TextEntity;
-import fr.snapgames.game.core.entity.behaviors.Behavior;
-import fr.snapgames.game.core.entity.behaviors.CameraInputBehavior;
-import fr.snapgames.game.core.entity.behaviors.CameraUpdateBehavior;
-import fr.snapgames.game.core.entity.behaviors.EnemyFollowerBehavior;
-import fr.snapgames.game.core.entity.behaviors.PlayerInputBehavior;
-import fr.snapgames.game.core.entity.behaviors.ScoreUpdateBehavior;
+import fr.snapgames.game.core.entity.*;
+import fr.snapgames.game.core.entity.behaviors.*;
 import fr.snapgames.game.core.gfx.Renderer;
 import fr.snapgames.game.core.io.Input;
 import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Influencer;
 import fr.snapgames.game.core.math.physic.Material;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
+import fr.snapgames.game.core.service.EntityManager;
 import fr.snapgames.game.core.utils.I18n;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Main Game Java2D test.
@@ -60,6 +46,7 @@ public class Game extends JPanel {
 
     private Configuration config;
     private I18n i18n;
+    private EntityManager entityMgr;
     private PhysicEngine pe;
     private Renderer renderer;
     private Input input;
@@ -90,6 +77,7 @@ public class Game extends JPanel {
         input = new Input(this);
         frame = createWindow(title, width, height);
 
+        entityMgr = new EntityManager(this);
         pe = new PhysicEngine(this);
         renderer = new Renderer(this);
         startTime = System.currentTimeMillis();
@@ -154,7 +142,7 @@ public class Game extends JPanel {
                 .setPosition(new Vector2D(worldWidth / 2.0, worldHeight / 2.0))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.BLUE)
-                .setMass(100.0)
+                .setMass(80.0)
                 .setMaterial(new Material("playerMat", 1.0, 0.21, 1.0))
                 .setAttribute("maxSpeed", 800.0)
                 .setAttribute("maxAcceleration", 800.0)
@@ -162,6 +150,7 @@ public class Game extends JPanel {
                 .setAttribute("score", 0)
                 .addBehavior(new PlayerInputBehavior());
         add(player);
+
         TextEntity score = (TextEntity) new TextEntity("score")
                 .setText("%05d")
                 .setValue(player, "score", 0)
@@ -172,7 +161,8 @@ public class Game extends JPanel {
                 .stickToCamera(true)
                 .addBehavior(new ScoreUpdateBehavior());
         add(score);
-        add(new Influencer("magnet-right")
+
+        add(new Influencer("magnet")
                 .setPosition(new Vector2D(0, worldHeight * 0.5))
                 .setSize(new Vector2D(100, worldHeight * 0.5))
                 .addForce(new Vector2D(10.0, 0.0))
@@ -181,7 +171,7 @@ public class Game extends JPanel {
         add(new Influencer("water")
                 .setPosition(new Vector2D(0, worldHeight * 0.80))
                 .setSize(new Vector2D(worldWidth, worldHeight * 0.20))
-                .addForce(new Vector2D(0.0, 9.81))
+                .addForce(new Vector2D(0.0, 10.0 * -0.981))
                 .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f))
                 .setMaterial(new Material("water", 1.0, 1.0, 0.40)));
 
@@ -219,14 +209,14 @@ public class Game extends JPanel {
         if (e instanceof Influencer) {
             getPhysicEngine().getWorld().add((Influencer) e);
         }
-        entities.put(e.name, e);
+        entityMgr.add(e);
     }
 
     /**
      * update game entities according to input
      */
     private void input() {
-        for (Entity e : entities.values()) {
+        for (Entity e : getEntities().values()) {
             for (Behavior b : e.behaviors) {
                 b.input(this, e);
             }
@@ -334,7 +324,7 @@ public class Game extends JPanel {
     }
 
     public Map<String, Entity> getEntities() {
-        return entities;
+        return entityMgr.getEntities();
     }
 
     public void setCurrentCamera(CameraEntity cam) {
@@ -377,6 +367,10 @@ public class Game extends JPanel {
         return realFPS;
     }
 
+    public long getCurrentGameTime() {
+        return System.currentTimeMillis() - (long) startTime;
+    }
+
     /**
      * Entry point for executing game.
      *
@@ -387,7 +381,4 @@ public class Game extends JPanel {
         game.run(args);
     }
 
-    public long getCurrentGameTime() {
-        return System.currentTimeMillis() - (long) startTime;
-    }
 }
