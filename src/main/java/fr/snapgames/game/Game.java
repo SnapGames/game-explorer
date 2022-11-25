@@ -321,6 +321,10 @@ public class Game extends JPanel {
         if (e.getKeyChar() == 'd') {
             debug = (debug + 1 < 6 ? debug + 1 : 0);
         }
+        if (e.getKeyChar() == 'g') {
+            double gy = getPhysicEngine().getWorld().getGravity().y;
+            getPhysicEngine().getWorld().getGravity().y = -gy;
+        }
     }
 
     public Map<String, Entity> getEntities() {

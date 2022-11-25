@@ -147,11 +147,12 @@ public class Renderer {
         g.setColor(new Color(0.6f, 0.0f, 0.0f, 0.7f));
         g.drawLine(0, viewport.height - 20, viewport.width, viewport.height - 20);
         g.setColor(Color.ORANGE);
-        String text = String.format("[ dbg:%01d | fps:%03d | obj:%d | time: %s]",
+        String text = String.format("[ dbg:%01d | fps:%03d | obj:%d | time: %s | g:%s]",
                 game.getDebug(),
                 game.getRealFPS(),
                 game.getEntities().size(),
-                Converters.formatTime(game.getCurrentGameTime()));
+                Converters.formatTime(game.getCurrentGameTime()),
+                game.getPhysicEngine().getWorld().getGravity());
         g.setFont(g.getFont().deriveFont(10.0f));
         g.drawString(text, 8, viewport.height - 8);
     }
