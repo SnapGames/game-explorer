@@ -5,12 +5,8 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import fr.snapgames.game.Game;
-import fr.snapgames.game.core.entity.behaviors.Behavior;
 import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Material;
 
@@ -88,7 +84,6 @@ public class GameEntity extends Entity {
         return this;
     }
 
-
     public Collection<String> getDebugInfo() {
         List<String> ls = new ArrayList<>();
         ls.add(String.format("id:%d", id));
@@ -101,12 +96,10 @@ public class GameEntity extends Entity {
         return ls;
     }
 
-
     public GameEntity setColor(Color color) {
         this.color = color;
         return this;
     }
-
 
     public GameEntity setMaterial(Material m) {
         this.material = m;
@@ -127,5 +120,19 @@ public class GameEntity extends Entity {
                 this.box = new Rectangle2D.Double(position.x, position.y, size.x, size.y);
             }
         }
+    }
+
+    public GameEntity addForces(List<Vector2D> fs) {
+        forces.addAll(fs);
+        return this;
+    }
+
+    public GameEntity addForce(Vector2D f) {
+        forces.add(f);
+        return this;
+    }
+
+    public boolean isAttributeExist(String materialName) {
+        return attributes.containsKey(materialName);
     }
 }

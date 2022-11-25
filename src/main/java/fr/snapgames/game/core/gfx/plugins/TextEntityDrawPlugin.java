@@ -5,6 +5,7 @@ import fr.snapgames.game.core.entity.TextEntity;
 import java.awt.*;
 
 public class TextEntityDrawPlugin implements RendererPlugin<TextEntity> {
+    
     @Override
     public Class<TextEntity> entityType() {
         return TextEntity.class;
