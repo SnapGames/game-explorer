@@ -1,24 +1,23 @@
 package fr.snapgames.game;
 
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-
 import fr.snapgames.game.core.config.Configuration;
 import fr.snapgames.game.core.entity.*;
 import fr.snapgames.game.core.entity.behaviors.*;
 import fr.snapgames.game.core.gfx.Renderer;
 import fr.snapgames.game.core.io.Input;
 import fr.snapgames.game.core.math.Vector2D;
+import fr.snapgames.game.core.math.physic.Influencer;
 import fr.snapgames.game.core.math.physic.Material;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
-import fr.snapgames.game.core.math.physic.World;
+import fr.snapgames.game.core.service.EntityManager;
 import fr.snapgames.game.core.utils.I18n;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Main Game Java2D test.
@@ -29,15 +28,15 @@ import fr.snapgames.game.core.utils.I18n;
 public class Game extends JPanel {
 
     // Frames to be rendered
-    double FPS = 60.0;
-    double fpsDelay = 1000000.0 / 60.0;
-    double scale = 2.0;
+    private double FPS = 60.0;
+    private double fpsDelay = 1000000.0 / 60.0;
+    private double scale = 2.0;
     // some internal flags
-    int debug = 0;
-    boolean exit = false;
-    boolean pause = false;
+    private int debug = 0;
+    private boolean exit = false;
+    private boolean pause = false;
 
-    long realFPS = 0;
+    private long realFPS = 0;
 
     /**
      * the Test mode is a flag to deactivate the while Loop in the {@link Game#loop}
@@ -45,20 +44,20 @@ public class Game extends JPanel {
      */
     private boolean testMode;
 
-    Configuration config;
-    I18n i18n;
-    PhysicEngine pe;
-    Renderer renderer;
-    Input input;
-    JFrame frame;
-
+    private Configuration config;
+    private I18n i18n;
+    private EntityManager entityMgr;
+    private PhysicEngine pe;
+    private Renderer renderer;
+    private Input input;
+    private JFrame frame;
 
     // Internal GameEntity cache
-    Map<String, Entity> entities = new HashMap<>();
-    CameraEntity currentCamera = null;
+    private Map<String, Entity> entities = new HashMap<>();
+    private CameraEntity currentCamera = null;
+    private double startTime;
 
     public Game() {
-
         this("/game.properties", false);
     }
 
@@ -78,9 +77,10 @@ public class Game extends JPanel {
         input = new Input(this);
         frame = createWindow(title, width, height);
 
+        entityMgr = new EntityManager(this);
         pe = new PhysicEngine(this);
         renderer = new Renderer(this);
-
+        startTime = System.currentTimeMillis();
 
     }
 
@@ -92,11 +92,11 @@ public class Game extends JPanel {
         frame.setLayout(new GridLayout());
         frame.setContentPane(this);
 
-        Dimension dim = new Dimension(width, height);
-        frame.setSize(dim);
-        frame.setPreferredSize(dim);
-        frame.setMinimumSize(dim);
-        frame.setMaximumSize(dim);
+        Dimension dim = new Dimension(width, height + frame.getInsets().top);
+        this.setSize(dim);
+        this.setPreferredSize(dim);
+        this.setMinimumSize(dim);
+        this.setMaximumSize(dim);
         frame.setIconImage(Toolkit.getDefaultToolkit()
                 .getImage(getClass()
                         .getResource("/images/sg-logo-image.png")));
@@ -142,7 +142,7 @@ public class Game extends JPanel {
                 .setPosition(new Vector2D(worldWidth / 2.0, worldHeight / 2.0))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.BLUE)
-                .setMass(100.0)
+                .setMass(80.0)
                 .setMaterial(new Material("playerMat", 1.0, 0.21, 1.0))
                 .setAttribute("maxSpeed", 800.0)
                 .setAttribute("maxAcceleration", 800.0)
@@ -150,6 +150,7 @@ public class Game extends JPanel {
                 .setAttribute("score", 0)
                 .addBehavior(new PlayerInputBehavior());
         add(player);
+
         TextEntity score = (TextEntity) new TextEntity("score")
                 .setText("%05d")
                 .setValue(player, "score", 0)
@@ -157,8 +158,22 @@ public class Game extends JPanel {
                 .setPosition(new Vector2D(screenWidth * 0.8, 10))
                 .setSize(new Vector2D(16, 16))
                 .setColor(Color.WHITE)
-                .stickToCamera(true);
+                .stickToCamera(true)
+                .addBehavior(new ScoreUpdateBehavior());
         add(score);
+
+        add(new Influencer("magnet")
+                .setPosition(new Vector2D(0, worldHeight * 0.5))
+                .setSize(new Vector2D(100, worldHeight * 0.5))
+                .addForce(new Vector2D(10.0, 0.0))
+                .setColor(new Color(0.6f, 0.5f, 0.0f, 0.5f)));
+
+        add(new Influencer("water")
+                .setPosition(new Vector2D(0, worldHeight * 0.80))
+                .setSize(new Vector2D(worldWidth, worldHeight * 0.20))
+                .addForce(new Vector2D(0.0, 10.0 * -0.981))
+                .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f))
+                .setMaterial(new Material("water", 1.0, 1.0, 0.40)));
 
         for (int i = 0; i < 10; i++) {
             GameEntity e = (GameEntity) new GameEntity("en_" + i)
@@ -173,7 +188,6 @@ public class Game extends JPanel {
                     .setAttribute("attraction.distance", 80.0)
                     .setAttribute("attraction.force", 40.0)
                     .addBehavior(new EnemyFollowerBehavior());
-
             add(e);
         }
 
@@ -192,15 +206,17 @@ public class Game extends JPanel {
     }
 
     public void add(GameEntity e) {
-        entities.put(e.name, e);
+        if (e instanceof Influencer) {
+            getPhysicEngine().getWorld().add((Influencer) e);
+        }
+        entityMgr.add(e);
     }
-
 
     /**
      * update game entities according to input
      */
     private void input() {
-        for (Entity e : entities.values()) {
+        for (Entity e : getEntities().values()) {
             for (Behavior b : e.behaviors) {
                 b.input(this, e);
             }
@@ -228,7 +244,6 @@ public class Game extends JPanel {
         renderer.draw(this, realFPS);
     }
 
-
     /**
      * Request to close this Window frame.
      */
@@ -243,6 +258,7 @@ public class Game extends JPanel {
     public void loop() {
         // elapsed Game Time
         double currentTime = System.currentTimeMillis();
+        double gameTime = currentTime - startTime;
         double previousTime = currentTime;
         double dt = 0;
         // FPS measure
@@ -250,7 +266,7 @@ public class Game extends JPanel {
         double timeFrame = 0.0;
         while (!exit && !testMode) {
             currentTime = System.currentTimeMillis();
-            // delta-time  in sec.
+            // delta-time in sec.
             dt = (currentTime - previousTime) * 0.001;
             input();
             if (!pause) {
@@ -278,8 +294,7 @@ public class Game extends JPanel {
             try {
                 Thread.sleep((long) (fpsDelay - dt) / 1000);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                System.err.println("unable to Wait some millis:" + e.getMessage());
             }
         }
     }
@@ -296,20 +311,20 @@ public class Game extends JPanel {
     }
 
     public void keyTyped(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_P ||
+        if (e.getKeyChar() == 'p' ||
                 e.getKeyCode() == KeyEvent.VK_PAUSE) {
             this.pause = !this.pause;
         }
-        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        if (e.getKeyChar() == 'q') {
             this.exit = true;
         }
-        if (e.getKeyCode() == KeyEvent.VK_D) {
+        if (e.getKeyChar() == 'd') {
             debug = (debug + 1 < 6 ? debug + 1 : 0);
         }
     }
 
     public Map<String, Entity> getEntities() {
-        return entities;
+        return entityMgr.getEntities();
     }
 
     public void setCurrentCamera(CameraEntity cam) {
@@ -327,7 +342,6 @@ public class Game extends JPanel {
     public void requestExit(boolean e) {
         this.exit = e;
     }
-
 
     public JFrame getFrame() {
         return frame;
@@ -353,6 +367,10 @@ public class Game extends JPanel {
         return realFPS;
     }
 
+    public long getCurrentGameTime() {
+        return System.currentTimeMillis() - (long) startTime;
+    }
+
     /**
      * Entry point for executing game.
      *
@@ -362,4 +380,5 @@ public class Game extends JPanel {
         Game game = new Game();
         game.run(args);
     }
+
 }

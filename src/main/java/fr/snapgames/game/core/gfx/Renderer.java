@@ -7,9 +7,11 @@ import fr.snapgames.game.core.entity.GameEntity;
 import fr.snapgames.game.core.entity.behaviors.Behavior;
 import fr.snapgames.game.core.entity.Entity;
 import fr.snapgames.game.core.gfx.plugins.GameEntityDrawPlugin;
+import fr.snapgames.game.core.gfx.plugins.InfluencerDrawPlugin;
 import fr.snapgames.game.core.gfx.plugins.RendererPlugin;
 import fr.snapgames.game.core.gfx.plugins.TextEntityDrawPlugin;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
+import fr.snapgames.game.core.utils.Converters;
 import fr.snapgames.game.core.utils.I18n;
 
 import javax.swing.*;
@@ -19,7 +21,6 @@ import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 
 /**
  * This is where all things are drawn.
@@ -37,14 +38,17 @@ public class Renderer {
     Color clearColor = Color.BLACK;
 
     private Map<Class<? extends Entity>, RendererPlugin> plugins = new HashMap<>();
+    private Game game;
 
     public Renderer(Game g) {
+        this.game = g;
         config = g.getConfiguration();
         frame = g.getFrame();
         buffer = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        debugEntityNames = config.getString("game.debug.entity.list", "");
         addPlugin(new GameEntityDrawPlugin());
         addPlugin(new TextEntityDrawPlugin());
-        debugEntityNames = config.getString("game.debug.entity.list", "");
+        addPlugin(new InfluencerDrawPlugin());
     }
 
     public void addPlugin(RendererPlugin rp) {
@@ -77,61 +81,86 @@ public class Renderer {
                 drawEntity(g, entity);
                 postDraw(g, entity.isStickToCamera());
             });
+
+            displayPauseMessage(g, game.getPause());
             if (game.getDebug() > 0) {
                 drawDisplayDebugInfo(game, g, 32);
-            }
-            if (Optional.ofNullable(currentCamera).isPresent()
-                    && game.getDebug() > 0) {
-                drawCameraDebug(g, currentCamera);
-            }
-            if (game.getPause()) {
-
-                g.setColor(new Color(0.3f, 0.6f, 0.4f, 0.9f));
-                g.fillRect(0, (currentCamera.viewport.height - 24) / 2, currentCamera.viewport.width, 24);
-
-                g.setColor(Color.WHITE);
-                g.setFont(g.getFont().deriveFont(14.0f).deriveFont(Font.BOLD));
-
-                String pauseTxt = I18n.get("game.state.pause.message");
-                int lng = g.getFontMetrics().stringWidth(pauseTxt);
-
-                g.drawString(
-                        pauseTxt,
-                        (currentCamera.viewport.width - lng) / 2,
-                        (currentCamera.viewport.height + 12) / 2);
-            }
-            g.dispose();
-            // draw image to screen.
-            if (Optional.ofNullable(frame).isPresent()) {
-                if (frame.getBufferStrategy() != null) {
-                    if (frame.getBufferStrategy().getDrawGraphics() == null) {
-                        return;
-                    }
-                    Graphics2D g2 = (Graphics2D) frame.getBufferStrategy().getDrawGraphics();
-
-                    g2.scale(scale, scale);
-                    g2.drawImage(buffer, 0, 18,
-                            null);
-                    g2.scale(1.0 / scale, 1.0 / scale);
-                    if (game.getDebug() > 1) {
-                        g2.setColor(Color.ORANGE);
-
-                        g2.setFont(g2.getFont().deriveFont(11.0f));
-                        g2.drawString("FPS:" + realFPS, 40, 50);
-                    }
-                    g2.dispose();
-                    if (frame.getBufferStrategy() != null) {
-                        frame.getBufferStrategy().show();
-                    }
+                if (Optional.ofNullable(currentCamera).isPresent()
+                        && game.getDebug() > 1) {
+                    drawCameraDebug(g, currentCamera);
                 }
+                drawScreenDebugLine(g, currentCamera.viewport);
+            }
+            // draw image to screen.
+            drawToWindow(realFPS, scale);
+
+            g.dispose();
+        }
+    }
+
+    private void displayPauseMessage(Graphics2D g, boolean pause) {
+        if (pause) {
+            Dimension viewport = currentCamera.viewport;
+            g.setColor(new Color(0.3f, 0.6f, 0.4f, 0.9f));
+            g.fillRect(0, (viewport.height - 24) / 2, viewport.width, 24);
+
+            g.setColor(Color.WHITE);
+            g.setFont(g.getFont().deriveFont(14.0f).deriveFont(Font.BOLD));
+
+            String pauseTxt = I18n.get("game.state.pause.message");
+            int lng = g.getFontMetrics().stringWidth(pauseTxt);
+
+            g.drawString(
+                    pauseTxt,
+                    (currentCamera.viewport.width - lng) / 2,
+                    (currentCamera.viewport.height + 12) / 2);
+        }
+    }
+
+    private void drawToWindow(double realFPS, double scale) {
+        if (Optional.ofNullable(frame).isPresent() && frame.getBufferStrategy() != null) {
+            if (frame.getBufferStrategy().getDrawGraphics() == null) {
+                return;
+            }
+            Graphics2D g2 = (Graphics2D) frame.getBufferStrategy().getDrawGraphics();
+
+            g2.scale(scale, scale);
+            g2.drawImage(buffer, 0, 18,
+                    null);
+            g2.scale(1.0 / scale, 1.0 / scale);
+            if (game.getDebug() > 1) {
+                g2.setColor(Color.ORANGE);
+
+                g2.setFont(g2.getFont().deriveFont(11.0f));
+                g2.drawString("FPS:" + realFPS, 40, 50);
+            }
+            g2.dispose();
+            if (frame.getBufferStrategy() != null) {
+                frame.getBufferStrategy().show();
             }
         }
+    }
+
+    private void drawScreenDebugLine(Graphics2D g, Dimension viewport) {
+        g.setColor(new Color(0.3f, 0.0f, 0.0f, 0.7f));
+        g.fillRect(0, viewport.height - 20, viewport.width, 20);
+        g.setColor(new Color(0.6f, 0.0f, 0.0f, 0.7f));
+        g.drawLine(0, viewport.height - 20, viewport.width, viewport.height - 20);
+        g.setColor(Color.ORANGE);
+        String text = String.format("[ dbg:%01d | fps:%03d | obj:%d | time: %s]",
+                game.getDebug(),
+                game.getRealFPS(),
+                game.getEntities().size(),
+                Converters.formatTime(game.getCurrentGameTime()));
+        g.setFont(g.getFont().deriveFont(10.0f));
+        g.drawString(text, 8, viewport.height - 8);
     }
 
     private void preDraw(Graphics2D g, boolean isSticky) {
         if (Optional.ofNullable(currentCamera).isPresent() && !isSticky) {
             if (currentCamera.rotation != 0.0) {
-                g.rotate(-currentCamera.rotation, currentCamera.viewport.width * 0.5, currentCamera.viewport.height * 0.5);
+                g.rotate(-currentCamera.rotation, currentCamera.viewport.width * 0.5,
+                        currentCamera.viewport.height * 0.5);
             }
             g.translate(-currentCamera.position.x, -currentCamera.position.y);
         }
@@ -141,11 +170,11 @@ public class Renderer {
         if (Optional.ofNullable(currentCamera).isPresent() && !isSticky) {
             g.translate(currentCamera.position.x, currentCamera.position.y);
             if (currentCamera.rotation != 0.0) {
-                g.rotate(currentCamera.rotation, currentCamera.viewport.width * 0.5, currentCamera.viewport.height * 0.5);
+                g.rotate(currentCamera.rotation, currentCamera.viewport.width * 0.5,
+                        currentCamera.viewport.height * 0.5);
             }
         }
     }
-
 
     public void drawEntity(Graphics2D g, Entity e) {
         if (plugins.containsKey(e.getClass())) {
@@ -177,7 +206,10 @@ public class Renderer {
             preDraw(g, entity.isStickToCamera());
 
             drawEntityDebugBox(g, entity, Color.ORANGE);
-            drawEntityDebugLine(g, entity);
+
+            if (game.getDebug() > 2) {
+                drawEntityDebugLine(g, entity);
+            }
             postDraw(g, entity.isStickToCamera());
 
         });
@@ -188,7 +220,7 @@ public class Renderer {
 
     private void drawPlayAreaGrid(Graphics2D g, int step, PhysicEngine pe) {
         preDraw(g, false);
-        g.setColor(Color.LIGHT_GRAY);
+        g.setColor(Color.GRAY);
         for (int x = 0; x < pe.getWorld().getPlayArea().getWidth(); x += step) {
             g.drawLine(x, 0, x, (int) pe.getWorld().getPlayArea().getHeight());
         }

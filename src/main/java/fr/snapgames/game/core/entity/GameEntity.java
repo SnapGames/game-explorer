@@ -88,7 +88,6 @@ public class GameEntity extends Entity {
         return this;
     }
 
-
     public Collection<String> getDebugInfo() {
         List<String> ls = new ArrayList<>();
         ls.add(String.format("id:%d", id));
@@ -101,12 +100,10 @@ public class GameEntity extends Entity {
         return ls;
     }
 
-
     public GameEntity setColor(Color color) {
         this.color = color;
         return this;
     }
-
 
     public GameEntity setMaterial(Material m) {
         this.material = m;
@@ -127,5 +124,19 @@ public class GameEntity extends Entity {
                 this.box = new Rectangle2D.Double(position.x, position.y, size.x, size.y);
             }
         }
+    }
+
+    public GameEntity addForces(List<Vector2D> fs) {
+        forces.addAll(fs);
+        return this;
+    }
+
+    public GameEntity addForce(Vector2D f) {
+        forces.add(f);
+        return this;
+    }
+
+    public boolean isAttributeExist(String materialName) {
+        return attributes.containsKey(materialName);
     }
 }
