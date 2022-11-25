@@ -1,6 +1,6 @@
 package fr.snapgames.game.core.entity;
 
-import fr.snapgames.game.core.entity.behaviors.Behavior;
+import fr.snapgames.game.core.behavior.Behavior;
 
 import java.util.ArrayList;
 import java.util.HashMap;

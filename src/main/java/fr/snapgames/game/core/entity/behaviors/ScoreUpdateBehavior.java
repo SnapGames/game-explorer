@@ -3,9 +3,10 @@ package fr.snapgames.game.core.entity.behaviors;
 import java.awt.Graphics2D;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.entity.Entity;
 
-public class ScoreUpdateBehavior implements Behavior {
+public class ScoreUpdateBehavior implements Behavior<Entity> {
 
     @Override
     public void update(Game game, Entity entity, double dt) {

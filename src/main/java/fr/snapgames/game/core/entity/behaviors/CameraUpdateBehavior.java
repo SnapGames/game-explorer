@@ -1,13 +1,14 @@
 package fr.snapgames.game.core.entity.behaviors;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.entity.CameraEntity;
 import fr.snapgames.game.core.entity.Entity;
 import fr.snapgames.game.core.entity.GameEntity;
 
 import java.awt.*;
 
-public class CameraUpdateBehavior implements Behavior {
+public class CameraUpdateBehavior implements Behavior<Entity> {
 
     @Override
     public void update(Game game, Entity entity, double dt) {

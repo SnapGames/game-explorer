@@ -1,5 +1,6 @@
 package fr.snapgames.game;
 
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.config.Configuration;
 import fr.snapgames.game.core.entity.*;
 import fr.snapgames.game.core.entity.behaviors.*;
@@ -9,6 +10,7 @@ import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Influencer;
 import fr.snapgames.game.core.math.physic.Material;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
+import fr.snapgames.game.core.scene.SceneManager;
 import fr.snapgames.game.core.service.EntityManager;
 import fr.snapgames.game.core.utils.I18n;
 
@@ -18,6 +20,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Main Game Java2D test.
@@ -50,6 +53,8 @@ public class Game extends JPanel {
     private PhysicEngine pe;
     private Renderer renderer;
     private Input input;
+
+    private SceneManager sceneMgr;
     private JFrame frame;
 
     // Internal GameEntity cache
@@ -80,6 +85,7 @@ public class Game extends JPanel {
         entityMgr = new EntityManager(this);
         pe = new PhysicEngine(this);
         renderer = new Renderer(this);
+        sceneMgr = new SceneManager(this);
         startTime = System.currentTimeMillis();
 
     }
@@ -129,80 +135,13 @@ public class Game extends JPanel {
      */
     private void initialize(String[] args) {
         config.parseArguments(args);
+        sceneMgr.getCurrent().initialize(this);
+        sceneMgr.getCurrent().load(this);
         create((Graphics2D) frame.getGraphics());
     }
 
     private void create(Graphics2D g) {
-
-        int worldWidth = config.getInteger("game.world.width", 1000);
-        int worldHeight = config.getInteger("game.world.height", 1000);
-        int screenWidth = config.getInteger("game.screen.width", 320);
-
-        GameEntity player = (GameEntity) new GameEntity("player")
-                .setPosition(new Vector2D(worldWidth / 2.0, worldHeight / 2.0))
-                .setSize(new Vector2D(16, 16))
-                .setColor(Color.BLUE)
-                .setMass(80.0)
-                .setMaterial(new Material("playerMat", 1.0, 0.21, 1.0))
-                .setAttribute("maxSpeed", 800.0)
-                .setAttribute("maxAcceleration", 800.0)
-                .setAttribute("speedStep", 300.0)
-                .setAttribute("score", 0)
-                .addBehavior(new PlayerInputBehavior());
-        add(player);
-
-        TextEntity score = (TextEntity) new TextEntity("score")
-                .setText("%05d")
-                .setValue(player, "score", 0)
-                .setFont(g.getFont().deriveFont(20.0f))
-                .setPosition(new Vector2D(screenWidth * 0.8, 10))
-                .setSize(new Vector2D(16, 16))
-                .setColor(Color.WHITE)
-                .stickToCamera(true)
-                .addBehavior(new ScoreUpdateBehavior());
-        add(score);
-
-        add(new Influencer("magnet")
-                .setPosition(new Vector2D(0, worldHeight * 0.5))
-                .setSize(new Vector2D(100, worldHeight * 0.5))
-                .addForce(new Vector2D(10.0, 0.0))
-                .setColor(new Color(0.6f, 0.5f, 0.0f, 0.5f)));
-
-        add(new Influencer("water")
-                .setPosition(new Vector2D(0, worldHeight * 0.80))
-                .setSize(new Vector2D(worldWidth, worldHeight * 0.20))
-                .addForce(new Vector2D(0.0, 10.0 * -0.981))
-                .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f))
-                .setMaterial(new Material("water", 1.0, 1.0, 0.40)));
-
-        for (int i = 0; i < 10; i++) {
-            GameEntity e = (GameEntity) new GameEntity("en_" + i)
-                    .setPosition(new Vector2D(Math.random() * worldWidth, Math.random() * worldHeight))
-                    .setSize(new Vector2D(12, 12))
-                    .setColor(Color.RED)
-                    .setType(EntityType.CIRCLE)
-                    .setMass(30.0)
-                    .setMaterial(new Material("enemyMat", 1.1, 0.70, 1.0))
-                    .setAttribute("maxSpeed", 800.0)
-                    .setAttribute("maxAcceleration", 800.0)
-                    .setAttribute("attraction.distance", 80.0)
-                    .setAttribute("attraction.force", 40.0)
-                    .addBehavior(new EnemyFollowerBehavior());
-            add(e);
-        }
-
-        int vpWidth = config.getInteger("game.screen.width", 320);
-        int vpHeight = config.getInteger("game.screen.height", 200);
-
-        CameraEntity cam = (CameraEntity) new CameraEntity("camera")
-                .setTarget(player.name)
-                .setTween(0.02)
-                .setViewport(new Dimension(vpWidth, vpHeight))
-                .setRotation(0.0)
-                .addBehavior(new CameraInputBehavior())
-                .addBehavior(new CameraUpdateBehavior());
-
-        setCurrentCamera(cam);
+        sceneMgr.getCurrent().create(this);
     }
 
     public void add(GameEntity e) {
@@ -221,8 +160,10 @@ public class Game extends JPanel {
                 b.input(this, e);
             }
         }
-        for (Behavior b : currentCamera.behaviors) {
-            b.input(this, currentCamera);
+        if (Optional.ofNullable(currentCamera).isPresent()) {
+            for (Behavior b : currentCamera.behaviors) {
+                b.input(this, currentCamera);
+            }
         }
     }
 

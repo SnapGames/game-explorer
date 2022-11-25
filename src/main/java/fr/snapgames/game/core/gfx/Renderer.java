@@ -4,7 +4,7 @@ import fr.snapgames.game.Game;
 import fr.snapgames.game.core.config.Configuration;
 import fr.snapgames.game.core.entity.CameraEntity;
 import fr.snapgames.game.core.entity.GameEntity;
-import fr.snapgames.game.core.entity.behaviors.Behavior;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.entity.Entity;
 import fr.snapgames.game.core.gfx.plugins.GameEntityDrawPlugin;
 import fr.snapgames.game.core.gfx.plugins.InfluencerDrawPlugin;
@@ -88,8 +88,8 @@ public class Renderer {
                 if (Optional.ofNullable(currentCamera).isPresent()
                         && game.getDebug() > 1) {
                     drawCameraDebug(g, currentCamera);
+                    drawScreenDebugLine(g, currentCamera.viewport);
                 }
-                drawScreenDebugLine(g, currentCamera.viewport);
             }
             // draw image to screen.
             drawToWindow(realFPS, scale);

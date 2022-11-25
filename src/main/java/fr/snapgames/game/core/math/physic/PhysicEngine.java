@@ -3,7 +3,7 @@ package fr.snapgames.game.core.math.physic;
 import fr.snapgames.game.Game;
 import fr.snapgames.game.core.config.Configuration;
 import fr.snapgames.game.core.entity.GameEntity;
-import fr.snapgames.game.core.entity.behaviors.Behavior;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.math.Vector2D;
 
 import java.awt.*;
@@ -40,13 +40,15 @@ public class PhysicEngine {
 
     public void update(Game g, double elapsed) {
         g.getEntities().values().stream()
-            .filter(e -> !(e instanceof Influencer))
-            .forEach(e -> {
-                updateEntity(g, (GameEntity) e, elapsed);
-                constrainEntityToWorld(world, (GameEntity) e);
-            });
-        for (Behavior b : g.getCurrentCamera().behaviors) {
-            b.update(g, g.getCurrentCamera(), elapsed);
+                .filter(e -> !(e instanceof Influencer))
+                .forEach(e -> {
+                    updateEntity(g, (GameEntity) e, elapsed);
+                    constrainEntityToWorld(world, (GameEntity) e);
+                });
+        if (Optional.ofNullable(g.getCurrentCamera()).isPresent()) {
+            for (Behavior b : g.getCurrentCamera().behaviors) {
+                b.update(g, g.getCurrentCamera(), elapsed);
+            }
         }
     }
 

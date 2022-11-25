@@ -5,12 +5,13 @@ import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.entity.Entity;
 import fr.snapgames.game.core.entity.GameEntity;
 import fr.snapgames.game.core.io.Input;
 import fr.snapgames.game.core.math.Vector2D;
 
-public class PlayerInputBehavior implements Behavior {
+public class PlayerInputBehavior implements Behavior<Entity> {
 
     @Override
     public void update(Game game, Entity entity, double dt) {

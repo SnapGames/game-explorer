@@ -1,13 +1,14 @@
 package fr.snapgames.game.core.entity.behaviors;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.entity.Entity;
 import fr.snapgames.game.core.entity.GameEntity;
 import fr.snapgames.game.core.math.Vector2D;
 
 import java.awt.*;
 
-public class EnemyFollowerBehavior implements Behavior {
+public class EnemyFollowerBehavior implements Behavior<Entity> {
     @Override
     public void input(Game g, Entity e) {
 

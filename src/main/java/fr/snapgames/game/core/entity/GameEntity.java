@@ -5,12 +5,8 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import fr.snapgames.game.Game;
-import fr.snapgames.game.core.entity.behaviors.Behavior;
 import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Material;
 
