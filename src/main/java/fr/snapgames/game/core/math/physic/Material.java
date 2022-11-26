@@ -32,4 +32,8 @@ public class Material {
         this.elasticity = e;
         return this;
     }
+
+    public String toString(){
+        return String.format("%s:{%4.2f,%4.2f,%4.2f}",name,density,elasticity,friction);
+    }
 }

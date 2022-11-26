@@ -1,9 +1,14 @@
 package fr.snapgames.game.core.scene;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.entity.CameraEntity;
+import fr.snapgames.game.core.entity.Entity;
 import fr.snapgames.game.core.entity.GameEntity;
 
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,6 +21,7 @@ public abstract class AbstractScene implements Scene {
      * Map of declared cameras on the scene.
      */
     protected Map<String, CameraEntity> cameras = new ConcurrentHashMap<>();
+    private Collection<Behavior<Scene>> behaviors = new ArrayList<>();
 
     public AbstractScene(Game g) {
         this.game = g;
@@ -52,12 +58,22 @@ public abstract class AbstractScene implements Scene {
 
     @Override
     public void load(Game g) {
+    }
 
+
+    @Override
+    public void input(Game g) {
+        behaviors.forEach(b -> b.input(game, this));
     }
 
     @Override
     public void update(Game g, double elapsed) {
+        behaviors.forEach(b -> b.update(game, this, elapsed));
+    }
 
+    @Override
+    public void draw(Game g, Graphics2D g2D) {
+        behaviors.forEach(b -> b.draw(game, this, g2D));
     }
 
     /**
@@ -78,5 +94,15 @@ public abstract class AbstractScene implements Scene {
      */
     protected GameEntity get(String gameObjectName) {
         return (GameEntity) game.getEntities().get(gameObjectName);
+    }
+
+
+    @Override
+    public Collection<Behavior<Scene>> getBehaviors() {
+        return behaviors;
+    }
+
+    public Map<String, Entity> getEntities() {
+        return this.game.getEntities();
     }
 }
