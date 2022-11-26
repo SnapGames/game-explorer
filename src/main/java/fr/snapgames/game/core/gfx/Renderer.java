@@ -85,8 +85,7 @@ public class Renderer {
             displayPauseMessage(g, game.getPause());
             if (game.getDebug() > 0) {
                 drawDisplayDebugInfo(game, g, 32);
-                if (Optional.ofNullable(currentCamera).isPresent()
-                        && game.getDebug() > 1) {
+                if (Optional.ofNullable(currentCamera).isPresent()) {
                     drawCameraDebug(g, currentCamera);
                     drawScreenDebugLine(g, currentCamera.viewport);
                 }
@@ -197,10 +196,6 @@ public class Renderer {
 
         g.setFont(g.getFont().deriveFont(9.0f));
 
-        preDraw(g, false);
-
-        postDraw(g, false);
-
         g.setColor(Color.ORANGE);
         game.getEntities().forEach((name, e) -> {
             GameEntity entity = (GameEntity) e;
@@ -208,7 +203,7 @@ public class Renderer {
 
             drawEntityDebugBox(g, entity, Color.ORANGE);
 
-            if (game.getDebug() > 2) {
+            if (game.getDebug() > 0) {
                 drawEntityDebugLine(g, entity);
             }
             postDraw(g, entity.isStickToCamera());
@@ -238,33 +233,34 @@ public class Renderer {
     private void drawEntityDebugBox(Graphics2D g, GameEntity e, Color c) {
         g.setColor(c);
         g.draw(e.box);
-        g.setColor(Color.MAGENTA);
-        if ((double) e.getAttribute("attraction.distance", 0.0) > 0.0) {
-            double d = (double) e.getAttribute("attraction.distance", 0.0);
-            float[] dash1 = {2f, 0f, 2f};
-            BasicStroke bs1 = new BasicStroke(1,
-                    BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_ROUND,
-                    1.0f,
-                    dash1,
-                    2f);
-            g.setStroke(bs1);
-            g.draw(new Ellipse2D.Double(
-                    e.position.x - (d - e.size.x) * 0.5,
-                    e.position.y - (d - e.size.y) * 0.5,
-                    d, d));
-            g.setStroke(new BasicStroke());
-        }
     }
 
+    /**
+     * <p>Draw all debug information for the required entity.</p>
+     * <p></p>If line "(d)mu debug info" contains a "(d)" value, the info line will be displayed only
+     * If d>=game debug level.</p>
+     * <p>E.g.:  <code>"(2)spd:%04.2f,%04.2f"</code> this value is displayed only if debug mode >=2.</p>
+     * <p>If nothing is required, the info line is displayed as soon the debug mode is >=1.</p>
+     *
+     * @param g
+     * @param entity
+     */
     private void drawEntityDebugLine(Graphics2D g, GameEntity entity) {
         if (debugEntityNames.contains(entity.name)) {
             g.setColor(Color.WHITE);
             int hl = g.getFontMetrics().getHeight();
             int il = 0;
             for (String s : entity.getDebugInfo()) {
-                g.drawString(s, (int) (entity.position.x + entity.size.x + 4.0), (int) entity.position.y + il);
-                il += hl - 3;
+                if (s.startsWith("(")) {
+                    int val = Integer.parseInt(s.substring(1, 2));
+                    if (val <= game.getDebug()) {
+                        g.drawString(s.substring(3), (int) (entity.position.x + entity.size.x + 4.0), (int) entity.position.y + il);
+                        il += hl - 3;
+                    }
+                } else {
+                    g.drawString(s, (int) (entity.position.x + entity.size.x + 4.0), (int) entity.position.y + il);
+                    il += hl - 3;
+                }
             }
         }
     }

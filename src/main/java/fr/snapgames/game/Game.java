@@ -118,7 +118,7 @@ public class Game extends JPanel {
 
         frame.setContentPane(this);
         frame.getContentPane().setPreferredSize(dim);
-
+        frame.setLocationRelativeTo(null);
         frame.addKeyListener(input);
         frame.pack();
         frame.setVisible(true);
