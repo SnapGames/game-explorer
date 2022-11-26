@@ -93,6 +93,8 @@ public class GameEntity extends Entity {
         ls.add(String.format("spd: %04.2f,%04.2f", this.speed.x, this.speed.y));
         ls.add(String.format("acc: %04.2f,%04.2f", this.acceleration.x, this.acceleration.y));
         ls.add(String.format("rot: %04.2f", this.rotation));
+        ls.add(String.format("mass: %04.2f", this.mass));
+        ls.add(String.format("mat: %s", this.material));
         return ls;
     }
 
