@@ -25,10 +25,10 @@ public class EnemyFollowerBehavior implements Behavior<Entity> {
             GameEntity p = (GameEntity) game.getEntities().get("player");
 
             if ((double) e.getAttribute("attraction.distance", 0.0) > 0.0) {
-                g.setColor(Color.LIGHT_GRAY);
+                g.setColor(Color.DARK_GRAY);
                 double d = (double) e.getAttribute("attraction.distance", 0.0);
                 drawDistanceArea(g, e, d, new float[]{2f, 0f, 2f});
-                g.setColor(Color.DARK_GRAY);
+                g.setColor(Color.LIGHT_GRAY);
                 double r = (double) e.getAttribute("attraction.release", 0.0);
                 drawDistanceArea(g, e, r, new float[]{1f, 0f, 1f});
             }
@@ -58,7 +58,7 @@ public class EnemyFollowerBehavior implements Behavior<Entity> {
                 e.position.x - (d - e.size.x) * 0.5,
                 e.position.y - (d - e.size.y) * 0.5,
                 d, d));
-        g.setStroke(new BasicStroke());
+        g.setStroke(new BasicStroke(1));
     }
 
     @Override
