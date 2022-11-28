@@ -182,7 +182,7 @@ public class Game extends JPanel {
      * @param realFPS displayed Frame Per Seconds.
      */
     private void draw(long realFPS) {
-        renderer.draw(this, realFPS);
+        renderer.draw(this, sceneMgr.getCurrent(), realFPS);
     }
 
     /**

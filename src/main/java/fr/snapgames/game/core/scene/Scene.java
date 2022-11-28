@@ -1,11 +1,21 @@
 package fr.snapgames.game.core.scene;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.entity.CameraEntity;
+import fr.snapgames.game.core.entity.Entity;
+
+import java.awt.*;
+import java.util.Collection;
+import java.util.Map;
 
 public interface Scene {
 
     String getName();
+
+    Map<String, Entity> getEntities();
+
+    Collection<Behavior<Scene>> getBehaviors();
 
     void initialize(Game g);
 
@@ -25,8 +35,7 @@ public interface Scene {
 
     void update(Game g, double elapsed);
 
-    void draw(Game g);
+    void draw(Game g, Graphics2D g2D);
 
     void dispose(Game g);
-
 }

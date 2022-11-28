@@ -1,6 +1,7 @@
 package fr.snapgames.game.demo.scenes;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.config.Configuration;
 import fr.snapgames.game.core.entity.CameraEntity;
 import fr.snapgames.game.core.entity.EntityType;
@@ -15,6 +16,7 @@ import fr.snapgames.game.core.scene.AbstractScene;
 import fr.snapgames.game.core.scene.Scene;
 
 import java.awt.*;
+import java.util.Collection;
 
 public class DemoScene extends AbstractScene implements Scene {
 
@@ -27,6 +29,7 @@ public class DemoScene extends AbstractScene implements Scene {
     public String getName() {
         return "demo";
     }
+
 
     @Override
     public void initialize(Game g) {
@@ -113,16 +116,6 @@ public class DemoScene extends AbstractScene implements Scene {
                 .addBehavior(new CameraUpdateBehavior());
 
         addCamera(cam);
-    }
-
-    @Override
-    public void input(Game g) {
-
-    }
-
-    @Override
-    public void draw(Game g) {
-
     }
 
     @Override
