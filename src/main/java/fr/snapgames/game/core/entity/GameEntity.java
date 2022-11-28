@@ -84,17 +84,24 @@ public class GameEntity extends Entity {
         return this;
     }
 
+    /**
+     * This getter prepares information for the debug mode.
+     *
+     * @return a list of String containing the evaluated debug info.
+     * @see fr.snapgames.game.core.gfx.Renderer#drawEntityDebugLine(Graphics2D, GameEntity)
+     */
     public Collection<String> getDebugInfo() {
         List<String> ls = new ArrayList<>();
         ls.add(String.format("id:%d", id));
         ls.add(String.format("name:%s", name));
-        ls.add(String.format("type:%s", type));
-        ls.add(String.format("pos: %04.2f,%04.2f", this.position.x, this.position.y));
-        ls.add(String.format("spd: %04.2f,%04.2f", this.speed.x, this.speed.y));
-        ls.add(String.format("acc: %04.2f,%04.2f", this.acceleration.x, this.acceleration.y));
-        ls.add(String.format("rot: %04.2f", this.rotation));
-        ls.add(String.format("mass: %04.2f", this.mass));
-        ls.add(String.format("mat: %s", this.material));
+        ls.add(String.format("(1)type:%s", type));
+        ls.add(String.format("(2)pos: %04.2f,%04.2f", this.position.x, this.position.y));
+        ls.add(String.format("(2)size: %04.2f,%04.2f", this.size.x, this.size.y));
+        ls.add(String.format("(3)spd: %04.2f,%04.2f", this.speed.x, this.speed.y));
+        ls.add(String.format("(3)acc: %04.2f,%04.2f", this.acceleration.x, this.acceleration.y));
+        ls.add(String.format("(3)rot: %04.2f", this.rotation));
+        ls.add(String.format("(4)mass: %04.2f", this.mass));
+        ls.add(String.format("(4)mat: %s", this.material));
         return ls;
     }
 

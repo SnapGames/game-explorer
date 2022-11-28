@@ -87,6 +87,7 @@ public class DemoScene extends AbstractScene implements Scene {
 
         for (int i = 0; i < 10; i++) {
             double size = Math.random() * 24.0;
+            double attrDistance = 80.0 * Math.random() + 30.0;
             GameEntity e = (GameEntity) new GameEntity("en_" + i)
                     .setPosition(new Vector2D(Math.random() * worldWidth, Math.random() * worldHeight))
                     .setSize(new Vector2D(size, size))
@@ -96,7 +97,8 @@ public class DemoScene extends AbstractScene implements Scene {
                     .setMaterial(new Material("enemyMat", 1.1, 0.70, 1.0))
                     .setAttribute("maxSpeed", 800.0)
                     .setAttribute("maxAcceleration", 800.0)
-                    .setAttribute("attraction.distance", 80.0 * Math.random() + 30.0)
+                    .setAttribute("attraction.distance", attrDistance)
+                    .setAttribute("attraction.release", attrDistance + Math.random() + 50.0)
                     .setAttribute("attraction.force", 20.0 * Math.random() + 5.0)
                     .addBehavior(new EnemyFollowerBehavior());
             add(e);
