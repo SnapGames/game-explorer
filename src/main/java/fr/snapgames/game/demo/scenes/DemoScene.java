@@ -95,7 +95,7 @@ public class DemoScene extends AbstractScene implements Scene {
                     .setAttribute("maxSpeed", 800.0)
                     .setAttribute("maxAcceleration", 800.0)
                     .setAttribute("attraction.distance", attrDistance)
-                    .setAttribute("attraction.release", attrDistance + 30.0)
+                    .setAttribute("attraction.release", attrDistance + Math.random() + 50.0)
                     .setAttribute("attraction.force", 20.0 * Math.random() + 5.0)
                     .addBehavior(new EnemyFollowerBehavior());
             add(e);
