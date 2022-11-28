@@ -27,7 +27,9 @@ public class EnemyFollowerBehavior implements Behavior<Entity> {
         GameEntity p = (GameEntity) game.getEntities().get("player");
         double attrDist = (double) e.attributes.get("attraction.distance");
         double attrForce = (double) e.attributes.get("attraction.force");
-        if (p.position.distance(e.position.add(p.size.multiply(0.5))) < attrDist * 0.5) {
+        if (p.position.add(p.size.multiply(0.5))
+                .distance(
+                        e.position.add(p.size.multiply(0.5))) < attrDist) {
             Vector2D v = p.position.substract(e.position);
             e.forces.add(v.normalize().multiply(attrForce));
         }

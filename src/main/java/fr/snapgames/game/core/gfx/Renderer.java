@@ -11,6 +11,7 @@ import fr.snapgames.game.core.gfx.plugins.InfluencerDrawPlugin;
 import fr.snapgames.game.core.gfx.plugins.RendererPlugin;
 import fr.snapgames.game.core.gfx.plugins.TextEntityDrawPlugin;
 import fr.snapgames.game.core.math.physic.PhysicEngine;
+import fr.snapgames.game.core.scene.Scene;
 import fr.snapgames.game.core.utils.Converters;
 import fr.snapgames.game.core.utils.I18n;
 
@@ -55,7 +56,7 @@ public class Renderer {
         this.plugins.put(rp.entityType(), rp);
     }
 
-    public void draw(Game game, long realFPS) {
+    public void draw(Game game, Scene scene, long realFPS) {
         currentCamera = game.getCurrentCamera();
         double scale = config.getDouble("game.screen.scale", 2.0);
         if (Optional.ofNullable(buffer).isPresent()) {
@@ -72,7 +73,7 @@ public class Renderer {
 
             drawPlayAreaGrid(g, 32, game.getPhysicEngine());
 
-            game.getEntities().values().forEach(e -> {
+            scene.getEntities().values().forEach(e -> {
                 GameEntity entity = (GameEntity) e;
                 preDraw(g, entity.isStickToCamera());
                 for (Behavior b : entity.behaviors) {
