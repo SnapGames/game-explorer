@@ -1,10 +1,32 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.snapgames.game</groupId>
     <artifactId>game</artifactId>
     <version>1.0.2-SNAPSHOT</version>
     <name>game-explorer</name>
     <description>A demonstration to create sustainable project.</description>
+    <!-- Project License -->
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://raw.githubusercontent.com/mcgivrer/fromClassToGame/main/LICENSE</url>
+        </license>
+    </licenses>
+
+    <!-- Authors and Designers -->
+    <contributors>
+        <contributor>
+            <name>Frédéric Delorme</name>
+            <email>frederic.delorme@snapgames.fr</email>
+            <organization>SnapGames</organization>
+            <organizationUrl>https://SnapGames.github.io/</organizationUrl>
+            <timezone>Europe/Paris</timezone>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </contributor>
+    </contributors>
 
     <!-- Project eco-system definition -->
     <organization>
@@ -24,7 +46,7 @@
 
     <distributionManagement>
         <repository>
-            <id>snapgames</id>
+            <id>github</id>
             <name>GitHub Packages</name>
             <url>https://maven.pkg.github.com/SnapGames/game-explorer</url>
         </repository>
@@ -208,10 +230,12 @@
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <shadedClassifierName>shaded</shadedClassifierName>
                     <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <transformer
+                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <mainClass>${project.mainClass}</mainClass>
                         </transformer>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                        <transformer
+                                implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                             <resource>src/main/resources/</resource>
                         </transformer>
                     </transformers>
@@ -234,7 +258,7 @@
                 <version>2.5.3</version>
                 <configuration>
                     <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>release</releaseProfiles>
+                    <releaseProfiles>github</releaseProfiles>
                     <tagNameFormat>v${project.version}</tagNameFormat>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
