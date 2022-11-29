@@ -2,6 +2,7 @@ package features;
 
 import fr.snapgames.game.Game;
 import fr.snapgames.game.core.math.Vector2D;
+import fr.snapgames.game.core.math.physic.Material;
 import fr.snapgames.game.core.math.physic.World;
 import io.cucumber.java8.En;
 
@@ -15,7 +16,9 @@ public class GameStepdefs implements En {
             game = (Game) TestContext.get("game", new Game());
             World world = new World(
                     new Dimension(320, 200),
-                    new Vector2D(0, -0.981));
+                    new Vector2D(0, -0.981))
+                    .setMaterial(
+                            new Material("default", 1.0, 1.0, 1.0));
             game.getPhysicEngine().setWorld(world);
             for (int i = 0; i < nbUpdate; i++) {
                 game.update(step);
