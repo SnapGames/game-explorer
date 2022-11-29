@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.snapgames.game</groupId>
     <artifactId>game</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>minimal-modele</name>
+    <version>1.0.1-SNAPSHOT</version>
+    <name>game-explorer</name>
     <description>A demonstration to create sustainable project.</description>
 
 
