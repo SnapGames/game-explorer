@@ -118,7 +118,7 @@ public class Game extends JPanel {
 
         frame.setContentPane(this);
         frame.getContentPane().setPreferredSize(dim);
-
+        frame.setLocationRelativeTo(null);
         frame.addKeyListener(input);
         frame.pack();
         frame.setVisible(true);
@@ -182,7 +182,7 @@ public class Game extends JPanel {
      * @param realFPS displayed Frame Per Seconds.
      */
     private void draw(long realFPS) {
-        renderer.draw(this, realFPS);
+        renderer.draw(this, sceneMgr.getCurrent(), realFPS);
     }
 
     /**

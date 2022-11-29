@@ -53,8 +53,9 @@ public class PhysicEngine {
     }
 
     public void updateEntity(Game g, GameEntity e, double elapsed) {
-        e.forces.add(world.getGravity().multiply(2.0));
         if (!e.isStickToCamera()) {
+            Vector2D gravity = world.getGravity();
+            e.forces.add(gravity);
             Material mWorld = addInfluencersEffects(e, world.getCollidingInfluencerWith(e));
 
             double friction = e.material.friction * (mWorld != null ? mWorld.friction : 1.0);
@@ -80,12 +81,26 @@ public class PhysicEngine {
         e.child.forEach(c -> updateEntity(g, e, elapsed));
     }
 
-    private Material addInfluencersEffects(GameEntity e, Collection<Influencer> collidingInfluencerWith) {
+    private Material addInfluencersEffects(
+            GameEntity e,
+            Collection<Influencer> collidingInfluencerWith) {
         Material m = null;
         for (Influencer i : collidingInfluencerWith) {
             e.addForces(i.forces);
+            // if influencer contains only a material.
             if (Optional.ofNullable(i.material).isPresent()) {
                 m = i.material;
+            }
+            // if influencer contains a specific world object
+            if (Optional.ofNullable(i.getWorld()).isPresent()) {
+                // if specific world material is applied
+                if (Optional.ofNullable(i.getWorld().getMaterial()).isPresent()) {
+                    m = i.getWorld().getMaterial();
+                }
+                // if a specific world gravity is applied
+                if (Optional.ofNullable(i.getWorld().getGravity()).isPresent()) {
+                    e.addForce(i.getWorld().getGravity());
+                }
             }
         }
         return m;

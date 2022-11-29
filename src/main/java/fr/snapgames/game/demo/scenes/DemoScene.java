@@ -1,6 +1,7 @@
 package fr.snapgames.game.demo.scenes;
 
 import fr.snapgames.game.Game;
+import fr.snapgames.game.core.behavior.Behavior;
 import fr.snapgames.game.core.config.Configuration;
 import fr.snapgames.game.core.entity.CameraEntity;
 import fr.snapgames.game.core.entity.EntityType;
@@ -10,10 +11,12 @@ import fr.snapgames.game.core.entity.behaviors.*;
 import fr.snapgames.game.core.math.Vector2D;
 import fr.snapgames.game.core.math.physic.Influencer;
 import fr.snapgames.game.core.math.physic.Material;
+import fr.snapgames.game.core.math.physic.World;
 import fr.snapgames.game.core.scene.AbstractScene;
 import fr.snapgames.game.core.scene.Scene;
 
 import java.awt.*;
+import java.util.Collection;
 
 public class DemoScene extends AbstractScene implements Scene {
 
@@ -26,6 +29,7 @@ public class DemoScene extends AbstractScene implements Scene {
     public String getName() {
         return "demo";
     }
+
 
     @Override
     public void initialize(Game g) {
@@ -42,7 +46,7 @@ public class DemoScene extends AbstractScene implements Scene {
 
         GameEntity player = (GameEntity) new GameEntity("player")
                 .setPosition(new Vector2D(worldWidth / 2.0, worldHeight / 2.0))
-                .setSize(new Vector2D(16, 16))
+                .setSize(new Vector2D(24, 32))
                 .setColor(Color.BLUE)
                 .setMass(80.0)
                 .setMaterial(new Material("playerMat", 1.0, 0.21, 1.0))
@@ -71,24 +75,31 @@ public class DemoScene extends AbstractScene implements Scene {
                 .setColor(new Color(0.6f, 0.5f, 0.0f, 0.5f)));
 
         add(new Influencer("water")
+                .setWorld(
+                        new World(
+                                null,
+                                new Vector2D(0.0, 0.90 * -0.981))
+                                .setMaterial(new Material("water", 1.0, 1.2, 0.75)))
                 .setPosition(new Vector2D(0, worldHeight * 0.80))
                 .setSize(new Vector2D(worldWidth, worldHeight * 0.20))
                 .addForce(new Vector2D(0.0, 10.0 * -0.981))
-                .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f))
-                .setMaterial(new Material("water", 1.0, 1.0, 0.70)));
+                .setColor(new Color(0.0f, 0.5f, 0.8f, 0.5f)));
 
         for (int i = 0; i < 10; i++) {
+            double size = Math.random() * 24.0;
+            double attrDistance = 80.0 * Math.random() + 30.0;
             GameEntity e = (GameEntity) new GameEntity("en_" + i)
                     .setPosition(new Vector2D(Math.random() * worldWidth, Math.random() * worldHeight))
-                    .setSize(new Vector2D(12, 12))
+                    .setSize(new Vector2D(size, size))
                     .setColor(Color.RED)
                     .setType(EntityType.CIRCLE)
-                    .setMass(30.0)
+                    .setMass(30.0 * Math.random() + 20.0)
                     .setMaterial(new Material("enemyMat", 1.1, 0.70, 1.0))
                     .setAttribute("maxSpeed", 800.0)
                     .setAttribute("maxAcceleration", 800.0)
-                    .setAttribute("attraction.distance", 80.0)
-                    .setAttribute("attraction.force", 40.0)
+                    .setAttribute("attraction.distance", attrDistance)
+                    .setAttribute("attraction.release", attrDistance + Math.random() + 50.0)
+                    .setAttribute("attraction.force", 20.0 * Math.random() + 5.0)
                     .addBehavior(new EnemyFollowerBehavior());
             add(e);
         }
@@ -105,16 +116,6 @@ public class DemoScene extends AbstractScene implements Scene {
                 .addBehavior(new CameraUpdateBehavior());
 
         addCamera(cam);
-    }
-
-    @Override
-    public void input(Game g) {
-
-    }
-
-    @Override
-    public void draw(Game g) {
-
     }
 
     @Override
