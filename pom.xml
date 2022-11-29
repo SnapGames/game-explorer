@@ -6,13 +6,22 @@
     <version>1.0.1-SNAPSHOT</version>
     <name>game-explorer</name>
     <description>A demonstration to create sustainable project.</description>
-
-
+    
+    <!-- Project eco-system definition -->
     <organization>
         <name>SnapGames</name>
         <url>https://snapgames.github.io/${project.name}</url>
     </organization>
-
+    <scm>
+        <url>https://github.com/SnapGames/game-explorer</url>
+        <connection>scm:git:git@github.com:SnapGames/game-explorer.git</connection>
+        <developerConnection>scm:git:https://github.com/SnapGames/game-explorer.git</developerConnection>
+        <tag>v${project.version}</tag>
+    </scm>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://gitea.rapsbuntu.me/SnapGames/game-explorer/issues</url>
+    </issueManagement>
 
     <properties>
         <maven.compiler.source>18</maven.compiler.source>
