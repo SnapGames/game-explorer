@@ -3,30 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.snapgames.game</groupId>
     <artifactId>game</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>game-explorer</name>
     <description>A demonstration to create sustainable project.</description>
-    <!-- Project License -->
-    <licenses>
-        <license>
-            <name>MIT</name>
-            <url>https://raw.githubusercontent.com/mcgivrer/fromClassToGame/main/LICENSE</url>
-        </license>
-    </licenses>
-
-    <!-- Authors and Designers -->
-    <contributors>
-        <contributor>
-            <name>Frédéric Delorme</name>
-            <email>frederic.delorme@snapgames.fr</email>
-            <organization>SnapGames</organization>
-            <organizationUrl>https://SnapGames.github.io/</organizationUrl>
-            <timezone>Europe/Paris</timezone>
-            <roles>
-                <role>Developer</role>
-            </roles>
-        </contributor>
-    </contributors>
 
     <!-- Project eco-system definition -->
     <organization>
@@ -44,18 +23,11 @@
         <url>https://gitea.rapsbuntu.me/SnapGames/game-explorer/issues</url>
     </issueManagement>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/SnapGames/game-explorer</url>
-        </repository>
-    </distributionManagement>
-
     <properties>
         <maven.compiler.source>19</maven.compiler.source>
         <maven.compiler.target>19</maven.compiler.target>
         <project.mainClass>fr.snapgames.game.Game</project.mainClass>
+
     </properties>
 
     <!-- Project Dependencies -->
@@ -258,7 +230,7 @@
                 <version>2.5.3</version>
                 <configuration>
                     <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>github</releaseProfiles>
+                    <releaseProfiles>release</releaseProfiles>
                     <tagNameFormat>v${project.version}</tagNameFormat>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
