@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.snapgames.game</groupId>
     <artifactId>game</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <name>game-explorer</name>
     <description>A demonstration to create sustainable project.</description>
 
@@ -15,7 +15,7 @@
         <url>https://github.com/SnapGames/game-explorer</url>
         <connection>scm:git:git@github.com:SnapGames/game-explorer.git</connection>
         <developerConnection>scm:git:https://github.com/SnapGames/game-explorer.git</developerConnection>
-        <tag>v1.0.1-SNAPSHOT</tag>
+        <tag>v${project.version}</tag>
     </scm>
     <issueManagement>
         <system>GitHub</system>
